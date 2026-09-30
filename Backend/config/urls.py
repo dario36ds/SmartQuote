@@ -30,4 +30,9 @@ urlpatterns = [
         "api/customers/",
         include("customers.urls"),
     ),
+
+    path(
+        "api/quotes/",
+        include("quotes.urls"),
+    ),
 ]
