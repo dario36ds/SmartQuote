@@ -137,3 +137,39 @@ class QuoteSerializer(serializers.ModelSerializer):
                 )
 
         return instance
+
+class PublicQuoteSerializer(serializers.ModelSerializer):
+    items = QuoteItemSerializer(many=True, read_only=True)
+
+    total = serializers.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        read_only=True,
+    )
+
+    customer_name = serializers.CharField(
+        source="customer.name",
+        read_only=True,
+    )
+
+    company_name = serializers.CharField(
+        source="customer.company",
+        read_only=True,
+    )
+
+    class Meta:
+        model = Quote
+        fields = (
+            "title",
+            "description",
+            "delivery_time",
+            "status",
+            "customer_name",
+            "company_name",
+            "items",
+            "total",
+            "sent_at",
+            "viewed_at",
+            "accepted_at",
+            "rejected_at",
+        )
