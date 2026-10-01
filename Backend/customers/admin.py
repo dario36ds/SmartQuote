@@ -6,10 +6,10 @@ from .models import Customer
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "name",
         "company",
         "email",
+        "phone",
         "user",
         "created_at",
     )
@@ -18,4 +18,40 @@ class CustomerAdmin(admin.ModelAdmin):
         "name",
         "company",
         "email",
+        "phone",
+    )
+
+    list_filter = (
+        "created_at",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    fieldsets = (
+        (
+            "Cliente",
+            {
+                "fields": (
+                    "user",
+                    "name",
+                    "company",
+                    "email",
+                    "phone",
+                    "address",
+                )
+            },
+        ),
+        (
+            "Date",
+            {
+                "fields": (
+                    "created_at",
+                    "updated_at",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
     )
