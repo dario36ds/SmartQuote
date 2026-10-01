@@ -1,37 +1,62 @@
 import json
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 from django.test import SimpleTestCase, override_settings
 
-from .services import OllamaServiceError, generate_quick_quote
+from .services import OllamaServiceError, generate_quote_text
 
 
-@override_settings(OLLAMA_BASE_URL="http://localhost:11434", OLLAMA_MODEL="qwen3:4b")
-class QuickQuoteServiceTests(SimpleTestCase):
+@override_settings(
+    OLLAMA_BASE_URL="http://localhost:11434",
+    OLLAMA_MODEL="mistral-small3.1:24b-instruct-2503-q4_K_M",
+)
+class QuoteTextServiceTests(SimpleTestCase):
+    def setUp(self):
+        self.quote = SimpleNamespace(
+            customer=SimpleNamespace(
+                name="Mario",
+                company="Ristorante La Piazza",
+            ),
+            title="Sito web",
+            delivery_time="3 settimane",
+            items=Mock(),
+        )
+        self.quote.items.all.return_value = [
+            SimpleNamespace(description="Sito di 5 pagine"),
+        ]
+
     @patch("ai_service.services.requests.post")
-    def test_extracts_quote_with_thinking_disabled(self, post):
-        quote = {
-            "customer_name": "Mario",
-            "company_name": "Ristorante La Piazza",
-            "title": "Sito web",
-            "items": [{"description": "Sito di 5 pagine", "quantity": 1, "unit_price": 800}],
-            "delivery_time": "3 settimane",
-            "missing_information": [],
+    def test_returns_generated_text(self, post):
+        text = "Realizzeremo il sito di 5 pagine in 3 settimane."
+        post.return_value.json.return_value = {
+            "response": json.dumps({"generated_text": f"  {text}\n"}),
         }
-        post.return_value.json.return_value = {"response": json.dumps(quote), "done_reason": "stop"}
-        self.assertEqual(generate_quick_quote("Sito per Mario a 800 euro"), quote)
-        self.assertIs(post.call_args.kwargs["json"]["think"], False)
+
+        self.assertEqual(generate_quote_text(self.quote), text)
+        payload = post.call_args.kwargs["json"]
+        self.assertEqual(
+            payload["model"],
+            "mistral-small3.1:24b-instruct-2503-q4_K_M",
+        )
+        self.assertEqual(payload["keep_alive"], 0)
+        self.assertEqual(payload["options"]["num_ctx"], 2048)
+        self.assertIn("Sito di 5 pagine", payload["prompt"])
 
     @patch("ai_service.services.requests.post")
     def test_rejects_invalid_responses(self, post):
         for payload, message in [
-            ({"response": "", "done_reason": "length"}, "limite di token"),
-            ({"response": "", "thinking": "ragionamento"}, "risposta vuota"),
-            ({"response": '{"items":'}, "risposta non valida"),
+            ({"response": ""}, "risposta non valida"),
+            ({"response": '{"generated_text":'}, "risposta non valida"),
+            ({"response": "{}"}, "risposta non valida"),
             ([], "risposta non valida"),
             ({}, "risposta non valida"),
+            (
+                {"response": json.dumps({"generated_text": "   "})},
+                "non ha generato alcun testo",
+            ),
         ]:
             with self.subTest(payload=payload):
                 post.return_value.json.return_value = payload
                 with self.assertRaisesRegex(OllamaServiceError, message):
-                    generate_quick_quote("Sito per Mario a 800 euro")
+                    generate_quote_text(self.quote)
