@@ -159,5 +159,5 @@ OLLAMA_BASE_URL = os.getenv(
 
 OLLAMA_MODEL = os.getenv(
     "OLLAMA_MODEL",
-    "qwen3:4b",
+    "mistral-small3.1:24b-instruct-2503-q4_K_M",
 )

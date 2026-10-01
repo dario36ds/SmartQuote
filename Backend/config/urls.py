@@ -35,9 +35,5 @@ urlpatterns = [
         "api/quotes/",
         include("quotes.urls"),
     ),
-
-    path(
-    "api/ai/",
-    include("ai_service.urls"),
-    ),
+    
 ]

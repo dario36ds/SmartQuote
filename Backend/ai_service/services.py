@@ -8,92 +8,87 @@ class OllamaServiceError(Exception):
     pass
 
 
-QUICK_QUOTE_SCHEMA = {
+QUOTE_TEXT_SCHEMA = {
     "type": "object",
     "properties": {
-        "customer_name": {
-            "type": ["string", "null"]
-        },
-        "company_name": {
-            "type": ["string", "null"]
-        },
-        "title": {
-            "type": ["string", "null"]
-        },
-        "items": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "description": {
-                        "type": "string"
-                    },
-                    "quantity": {
-                        "type": "number"
-                    },
-                    "unit_price": {
-                        "type": ["number", "null"]
-                    },
-                },
-                "required": [
-                    "description",
-                    "quantity",
-                    "unit_price",
-                ],
-            },
-        },
-        "delivery_time": {
-            "type": ["string", "null"]
-        },
-        "missing_information": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            },
-        },
+        "generated_text": {
+            "type": "string",
+        }
     },
     "required": [
-        "customer_name",
-        "company_name",
-        "title",
-        "items",
-        "delivery_time",
-        "missing_information",
+        "generated_text",
     ],
 }
 
 
-def generate_quick_quote(text):
-    schema_string = json.dumps(
-        QUICK_QUOTE_SCHEMA,
-        ensure_ascii=False,
+def generate_quote_text(quote, tone="professional"):
+    tone_descriptions = {
+        "professional": "professionale, formale e chiaro",
+        "friendly": "cordiale, amichevole ma professionale",
+        "concise": "molto sintetico e diretto",
+        "commercial": "commerciale e convincente ma non aggressivo",
+    }
+
+    tone_description = tone_descriptions.get(
+        tone,
+        tone_descriptions["professional"],
+    )
+
+    items_text = "\n".join(
+        f"- {item.description}"
+        for item in quote.items.all()
     )
 
     prompt = f"""
-Sei un assistente che estrae informazioni per la creazione
-di preventivi commerciali.
+Genera il testo descrittivo di un preventivo commerciale destinato
+direttamente al cliente finale.
 
-Analizza esclusivamente il testo fornito dall'utente.
+DATI DEL PREVENTIVO
 
-REGOLE IMPORTANTI:
+Cliente:
+{quote.customer.name}
 
+Azienda:
+{quote.customer.company or "Non specificata"}
+
+Titolo:
+{quote.title}
+
+Servizi inclusi:
+{items_text}
+
+Tempo di consegna:
+{quote.delivery_time or "Non specificato"}
+
+Tono richiesto:
+{tone_description}
+
+REGOLE:
+
+- Usa esclusivamente le informazioni fornite.
 - Non inventare informazioni.
-- Non inventare prezzi.
-- Non inventare nomi.
+- Non inventare servizi.
+- Non inventare sconti.
+- Non inventare condizioni di pagamento.
+- Non inventare garanzie.
+- Non inventare scadenze o periodi di validità del preventivo.
 - Non inventare tempistiche.
-- Se un'informazione non è presente, usa null.
-- Inserisci in missing_information le informazioni importanti mancanti.
-- quantity deve essere 1 se viene descritto un singolo servizio e non
-  viene indicata esplicitamente un'altra quantità.
-- Restituisci esclusivamente dati conformi allo schema JSON.
-
-Schema:
-
-{schema_string}
-
-Testo dell'utente:
-
-{text}
+- Non riportare prezzi, importi, quantità o totale nel testo.
+- Non aggiungere benefici, vantaggi, obiettivi commerciali o caratteristiche che non siano esplicitamente presenti nei dati forniti.
+- I dati economici saranno mostrati separatamente dall'applicazione.
+- Puoi descrivere esclusivamente i servizi realmente presenti.
+- Puoi indicare il tempo di consegna solo se è stato fornito.
+- Non aggiungere firme o nomi del fornitore non presenti.
+- Non scrivere etichette come "Cliente:" o "Azienda:".
+- Rivolgiti direttamente al cliente in modo naturale.
+- Non usare elenchi puntati.
+- Non usare Markdown.
+- Non aggiungere titoli come "Preventivo" o "Risposta".
+- Non spiegare il ragionamento.
+- Non descrivere il compito che stai svolgendo.
+- Non inserire ragionamenti interni nel testo finale.
+- Scrivi uno o due brevi paragrafi.
+- Restituisci esclusivamente il risultato finale nel campo generated_text.
 """
 
     try:
@@ -103,10 +98,12 @@ Testo dell'utente:
                 "model": settings.OLLAMA_MODEL,
                 "prompt": prompt,
                 "stream": False,
-                "think": False,
-                "format": QUICK_QUOTE_SCHEMA,
+                "format": QUOTE_TEXT_SCHEMA,
+                "keep_alive": 0,
                 "options": {
-                    "temperature": 0,
+                    "temperature": 0.2,
+                    "num_ctx": 2048,
+                    "num_predict": 500,
                 },
             },
             timeout=120,
@@ -120,13 +117,26 @@ Testo dell'utente:
         ) from exc
 
     try:
-        ollama_response = response.json()
+        ollama_data = response.json()
 
-        generated_text = ollama_response["response"]
+        raw_response = ollama_data["response"]
 
-        return json.loads(generated_text)
+        structured_output = json.loads(
+            raw_response
+        )
 
-    except (KeyError, TypeError, ValueError) as exc:
+        generated_text = structured_output[
+            "generated_text"
+        ].strip()
+
+    except (ValueError, KeyError, TypeError) as exc:
         raise OllamaServiceError(
             "Ollama ha restituito una risposta non valida."
         ) from exc
+
+    if not generated_text:
+        raise OllamaServiceError(
+            "Ollama non ha generato alcun testo."
+        )
+
+    return generated_text

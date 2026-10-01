@@ -8,6 +8,10 @@ from .models import Quote
 from .serializers import QuoteSerializer
 from rest_framework.permissions import AllowAny
 from .serializers import PublicQuoteSerializer
+from ai_service.services import (
+    OllamaServiceError,
+    generate_quote_text,
+)
 
 
 class QuoteViewSet(ModelViewSet):
@@ -21,6 +25,48 @@ class QuoteViewSet(ModelViewSet):
             .prefetch_related("items")
             .order_by("-created_at")
         )
+    
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="generate-text",
+    )
+    def generate_text(self, request, pk=None):
+        quote = self.get_object()
+
+        tone = request.data.get("tone", "professional")
+
+        allowed_tones = {
+            "professional",
+            "friendly",
+            "concise",
+            "commercial",
+        }
+
+        if tone not in allowed_tones:
+            return Response(
+                {
+                    "detail": "Tono non valido."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            generated_text = generate_quote_text(
+                quote,
+                tone,
+            )
+        except OllamaServiceError as exc:
+            return Response(
+                {
+                    "detail": str(exc)
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response({
+            "generated_text": generated_text
+        })
 
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
