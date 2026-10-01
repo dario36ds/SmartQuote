@@ -46,10 +46,12 @@ INSTALLED_APPS = [
     "customers",
     "quotes",
     "ai_service",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -161,3 +163,8 @@ OLLAMA_MODEL = os.getenv(
     "OLLAMA_MODEL",
     "mistral-small3.1:24b-instruct-2503-q4_K_M",
 )
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
