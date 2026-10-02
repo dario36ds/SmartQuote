@@ -38,8 +38,13 @@ export default function QuotesPage() {
   });
   const [items, setItems] = useState(() => [createEmptyItem()]);
   const [saving, setSaving] = useState(false);
-  const [createError, setCreateError] = useState("");
-  const [createSuccess, setCreateSuccess] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
+  const busy = saving || deletingId !== null;
+  const isEditing = editingId !== null;
   const filteredQuotes = customerId
     ? quotes.filter((quote) => String(quote.customer) === customerId)
     : quotes;
@@ -103,7 +108,7 @@ export default function QuotesPage() {
   function handleQuoteChange(event) {
     const { name, value } = event.target;
     setQuoteForm((current) => ({ ...current, [name]: value }));
-    setCreateSuccess(false);
+    setFormSuccess("");
   }
 
   function handleItemChange(itemKey, event) {
@@ -111,29 +116,74 @@ export default function QuotesPage() {
     setItems((current) => current.map((item) =>
       item.key === itemKey ? { ...item, [name]: value } : item
     ));
-    setCreateSuccess(false);
+    setFormSuccess("");
   }
 
   function handleAddItem() {
     const item = createEmptyItem();
     setItems((current) => [...current, item]);
-    setCreateSuccess(false);
+    setFormSuccess("");
   }
 
-  async function handleCreate(event) {
+  function handleRemoveItem(itemKey) {
+    if (busy) {
+      return;
+    }
+
+    setItems((current) => current.length > 1
+      ? current.filter((item) => item.key !== itemKey)
+      : current
+    );
+    setFormError("");
+    setFormSuccess("");
+  }
+
+  function resetForm() {
+    setEditingId(null);
+    setQuoteForm({ customer: "", title: "", delivery_time: "" });
+    setItems([createEmptyItem()]);
+    setFormError("");
+    setFormSuccess("");
+  }
+
+  function handleEdit(quote) {
+    if (busy) {
+      return;
+    }
+
+    setEditingId(quote.id);
+    setQuoteForm({
+      customer: String(quote.customer),
+      title: quote.title,
+      delivery_time: quote.delivery_time,
+    });
+    setItems(quote.items.length > 0
+      ? quote.items.map((item) => ({
+          key: crypto.randomUUID(),
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+        }))
+      : [createEmptyItem()]
+    );
+    setFormError("");
+    setFormSuccess("");
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    if (saving || loading || error) {
+    if (busy || loading || error) {
       return;
     }
 
     setSaving(true);
-    setCreateError("");
-    setCreateSuccess(false);
+    setFormError("");
+    setFormSuccess("");
 
     try {
-      const quote = await apiRequest("/quotes/", {
-        method: "POST",
+      const quote = await apiRequest(isEditing ? `/quotes/${editingId}/` : "/quotes/", {
+        method: isEditing ? "PATCH" : "POST",
         token,
         body: {
           ...quoteForm,
@@ -146,17 +196,19 @@ export default function QuotesPage() {
         },
       });
 
-      setQuotes((current) => [quote, ...current]);
-      setQuoteForm({ customer: "", title: "", delivery_time: "" });
-      setItems([createEmptyItem()]);
-      setCreateSuccess(true);
+      setQuotes((current) => isEditing
+        ? current.map((item) => item.id === quote.id ? quote : item)
+        : [quote, ...current]
+      );
+      resetForm();
+      setFormSuccess(isEditing ? "Preventivo aggiornato." : "Preventivo creato.");
     } catch (err) {
       const itemErrors = Array.isArray(err.data?.items) ? err.data.items : [];
       const itemError = itemErrors.find((item) =>
         item?.description?.[0] || item?.quantity?.[0] || item?.unit_price?.[0]
       );
 
-      setCreateError(
+      setFormError(
         err.data?.customer?.[0] ||
           err.data?.title?.[0] ||
           err.data?.delivery_time?.[0] ||
@@ -169,6 +221,36 @@ export default function QuotesPage() {
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete(quote) {
+    if (busy) {
+      return;
+    }
+
+    if (!window.confirm(`Vuoi eliminare il preventivo "${quote.title}"?`)) {
+      return;
+    }
+
+    setDeleteError("");
+    setDeletingId(quote.id);
+
+    try {
+      await apiRequest(`/quotes/${quote.id}/`, {
+        method: "DELETE",
+        token,
+      });
+
+      setQuotes((current) => current.filter((item) => item.id !== quote.id));
+
+      if (editingId === quote.id) {
+        resetForm();
+      }
+    } catch (err) {
+      setDeleteError(err.message);
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -213,11 +295,13 @@ export default function QuotesPage() {
       {!customersLoading && !customersError && customers.length > 0 && (
         <form
           aria-labelledby="new-quote-heading"
-          onSubmit={handleCreate}
+          onSubmit={handleSubmit}
         >
-          <h3 id="new-quote-heading">Nuovo preventivo</h3>
+          <h3 id="new-quote-heading">
+            {isEditing ? "Modifica preventivo" : "Nuovo preventivo"}
+          </h3>
 
-          <fieldset disabled={saving || loading || Boolean(error)}>
+          <fieldset disabled={busy || loading || Boolean(error)}>
             <legend>Dati del preventivo</legend>
 
           <div>
@@ -304,6 +388,15 @@ export default function QuotesPage() {
                   required
                 />
               </div>
+
+              <button
+                type="button"
+                disabled={items.length === 1}
+                onClick={() => handleRemoveItem(item.key)}
+                aria-label={`Rimuovi voce ${index + 1}`}
+              >
+                Rimuovi voce
+              </button>
             </fieldset>
           ))}
 
@@ -312,18 +405,25 @@ export default function QuotesPage() {
           </button>
 
           <button type="submit">
-            {saving ? "Salvataggio..." : "Crea preventivo"}
+            {saving ? "Salvataggio..." : isEditing ? "Salva modifiche" : "Crea preventivo"}
           </button>
+
+          {isEditing && (
+            <button type="button" onClick={resetForm}>
+              Annulla
+            </button>
+          )}
           </fieldset>
 
-          {createError && <p role="alert">{createError}</p>}
-          {createSuccess && <p role="status">Preventivo creato.</p>}
+          {formError && <p role="alert">{formError}</p>}
+          {formSuccess && <p role="status">{formSuccess}</p>}
         </form>
       )}
 
       {loading && <p>Caricamento preventivi...</p>}
 
       {!loading && error && <p role="alert">{error}</p>}
+      {deleteError && <p role="alert">{deleteError}</p>}
 
       {!loading && !error && filteredQuotes.length === 0 && (
         <p>
@@ -341,6 +441,7 @@ export default function QuotesPage() {
               <th scope="col">Stato</th>
               <th scope="col">Totale</th>
               <th scope="col">Tempo di consegna</th>
+              <th scope="col">Azioni</th>
             </tr>
           </thead>
           <tbody>
@@ -355,6 +456,22 @@ export default function QuotesPage() {
                   })}
                 </td>
                 <td>{quote.delivery_time || "—"}</td>
+                <td>
+                  <button
+                    type="button"
+                    disabled={busy || customersLoading || Boolean(customersError) || customers.length === 0}
+                    onClick={() => handleEdit(quote)}
+                  >
+                    Modifica
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => handleDelete(quote)}
+                  >
+                    {deletingId === quote.id ? "Eliminazione..." : "Elimina"}
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
