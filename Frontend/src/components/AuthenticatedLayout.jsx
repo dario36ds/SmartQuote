@@ -22,6 +22,8 @@ export default function AuthenticatedLayout({ children }) {
           <NavLink to="/" end>Dashboard</NavLink>
           {" | "}
           <NavLink to="/customers">Clienti</NavLink>
+          {" | "}
+          <NavLink to="/quotes">Preventivi</NavLink>
         </nav>
 
         <button type="button" onClick={handleLogout}>

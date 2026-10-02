@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import CustomersPage from "./pages/CustomersPage";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
+import QuotesPage from "./pages/QuotesPage";
 import RegisterPage from "./pages/RegisterPage";
 
 export default function App() {
@@ -27,6 +28,15 @@ export default function App() {
         element={
           <ProtectedRoute>
             <CustomersPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/quotes"
+        element={
+          <ProtectedRoute>
+            <QuotesPage />
           </ProtectedRoute>
         }
       />
