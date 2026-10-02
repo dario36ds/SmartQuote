@@ -12,23 +12,61 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 import os
+import re
+import shlex
 
+from django.core.exceptions import ImproperlyConfigured
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Carica il .env della radice, mantenendo prioritarie le variabili del processo.
+ENV_FILE = BASE_DIR.parent / ".env"
+if ENV_FILE.is_file():
+    for line_number, line in enumerate(ENV_FILE.read_text(encoding="utf-8").splitlines(), 1):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        name, separator, value = line.partition("=")
+        name, value = name.strip(), value.strip()
+        if not separator or not name.isidentifier():
+            raise ImproperlyConfigured(f"Formato non valido nel .env alla riga {line_number}.")
+
+        try:
+            if value.startswith(("'", '"')):
+                values = shlex.split(value, comments=True)
+                if len(values) != 1:
+                    raise ValueError
+                value = values[0]
+            else:
+                value = re.split(r"\s+#", value, maxsplit=1)[0].rstrip()
+        except ValueError as exc:
+            raise ImproperlyConfigured(
+                f"Valore non valido nel .env alla riga {line_number}."
+            ) from exc
+
+        os.environ.setdefault(name, value)
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-p_+-ke9zl64%*xo-2d^kt!aij(adhbw(%(o1i!(s)&#&9ev9x0'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "").strip()
+if not SECRET_KEY:
+    raise ImproperlyConfigured("Configura DJANGO_SECRET_KEY nel .env o nelle variabili ambiente.")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG_VALUE = os.getenv("DJANGO_DEBUG", "False").strip().lower()
+if DEBUG_VALUE not in ("true", "false", "1", "0", "yes", "no", "on", "off"):
+    raise ImproperlyConfigured("DJANGO_DEBUG deve essere un valore booleano, ad esempio True o False.")
+DEBUG = DEBUG_VALUE in ("true", "1", "yes", "on")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
 
 
 # Application definition
@@ -90,7 +128,7 @@ DATABASES = {
         "USER": os.getenv("DB_USER", "smartquote"),
         "PASSWORD": os.getenv(
             "DB_PASSWORD",
-            "smartquote_password",
+            "",
         ),
         "HOST": os.getenv("DB_HOST", "127.0.0.1"),
         "PORT": os.getenv("DB_PORT", "5432"),
@@ -120,9 +158,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'it-it'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Rome'
 
 USE_I18N = True
 
@@ -165,6 +203,10 @@ OLLAMA_MODEL = os.getenv(
 )
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
+    if origin.strip()
 ]
