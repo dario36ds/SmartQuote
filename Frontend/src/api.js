@@ -25,7 +25,7 @@ export async function apiRequest(
     }
   );
 
-  let data = null;
+  let data;
 
   try {
     data = await response.json();
