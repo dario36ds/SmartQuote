@@ -19,7 +19,9 @@ export default function CustomersPage() {
   const [error, setError] = useState("");
   const [form, setForm] = useState({ ...EMPTY_CUSTOMER });
   const [saving, setSaving] = useState(false);
-  const [createError, setCreateError] = useState("");
+  const [formError, setFormError] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const isEditing = editingId !== null;
 
   useEffect(() => {
     let active = true;
@@ -54,27 +56,53 @@ export default function CustomersPage() {
     setForm((current) => ({ ...current, [name]: value }));
   }
 
-  async function handleCreate(event) {
+  function handleEdit(customer) {
+    setEditingId(customer.id);
+    setForm({
+      name: customer.name,
+      company: customer.company,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+    });
+    setFormError("");
+  }
+
+  function handleCancelEdit() {
+    setEditingId(null);
+    setForm({ ...EMPTY_CUSTOMER });
+    setFormError("");
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
 
     if (saving) {
       return;
     }
 
-    setCreateError("");
+    setFormError("");
     setSaving(true);
 
     try {
-      const customer = await apiRequest("/customers/", {
-        method: "POST",
-        token,
-        body: form,
-      });
+      const customer = await apiRequest(
+        isEditing ? `/customers/${editingId}/` : "/customers/",
+        {
+          method: isEditing ? "PATCH" : "POST",
+          token,
+          body: form,
+        }
+      );
 
-      setCustomers((current) => [customer, ...current]);
+      setCustomers((current) =>
+        isEditing
+          ? current.map((item) => item.id === customer.id ? customer : item)
+          : [customer, ...current]
+      );
       setForm({ ...EMPTY_CUSTOMER });
+      setEditingId(null);
     } catch (err) {
-      setCreateError(
+      setFormError(
         err.data?.name?.[0] ||
           err.data?.company?.[0] ||
           err.data?.email?.[0] ||
@@ -97,8 +125,8 @@ export default function CustomersPage() {
       {!loading && error && <p role="alert">{error}</p>}
 
       {!loading && !error && (
-        <form onSubmit={handleCreate}>
-          <h3>Nuovo cliente</h3>
+        <form onSubmit={handleSubmit}>
+          <h3>{isEditing ? "Modifica cliente" : "Nuovo cliente"}</h3>
 
           <fieldset disabled={saving}>
             <legend>Dati del cliente</legend>
@@ -161,11 +189,17 @@ export default function CustomersPage() {
             </div>
 
             <button type="submit">
-              {saving ? "Salvataggio..." : "Crea cliente"}
+              {saving ? "Salvataggio..." : isEditing ? "Salva modifiche" : "Crea cliente"}
             </button>
+
+            {isEditing && (
+              <button type="button" onClick={handleCancelEdit}>
+                Annulla
+              </button>
+            )}
           </fieldset>
 
-          {createError && <p role="alert">{createError}</p>}
+          {formError && <p role="alert">{formError}</p>}
         </form>
       )}
 
@@ -182,6 +216,7 @@ export default function CustomersPage() {
               <th scope="col">Email</th>
               <th scope="col">Telefono</th>
               <th scope="col">Indirizzo</th>
+              <th scope="col">Azioni</th>
             </tr>
           </thead>
           <tbody>
@@ -192,6 +227,15 @@ export default function CustomersPage() {
                 <td>{customer.email || "—"}</td>
                 <td>{customer.phone || "—"}</td>
                 <td>{customer.address || "—"}</td>
+                <td>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => handleEdit(customer)}
+                  >
+                    Modifica
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
