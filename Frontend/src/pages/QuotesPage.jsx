@@ -572,6 +572,7 @@ export default function QuotesPage() {
               <th scope="col">Stato</th>
               <th scope="col">Totale</th>
               <th scope="col">Tempo di consegna</th>
+              <th scope="col">Link pubblico</th>
               <th scope="col">Azioni</th>
             </tr>
           </thead>
@@ -615,6 +616,17 @@ export default function QuotesPage() {
                   })}
                 </td>
                 <td>{quote.delivery_time || "—"}</td>
+                <td>
+                  {quote.status !== "DRAFT" && quote.public_token ? (
+                    <input
+                      type="text"
+                      readOnly
+                      aria-label={`Link pubblico di ${quote.title}`}
+                      value={`${window.location.origin}/q/${quote.public_token}`}
+                      onFocus={(event) => event.currentTarget.select()}
+                    />
+                  ) : "—"}
+                </td>
                 <td>
                   {quote.status === "DRAFT" && (
                     <>

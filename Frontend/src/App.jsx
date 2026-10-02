@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import CustomersPage from "./pages/CustomersPage";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
+import PublicQuotePage from "./pages/PublicQuotePage";
 import QuotesPage from "./pages/QuotesPage";
 import RegisterPage from "./pages/RegisterPage";
 
@@ -21,6 +22,11 @@ export default function App() {
       <Route
         path="/register"
         element={<RegisterPage />}
+      />
+
+      <Route
+        path="/q/:token"
+        element={<PublicQuotePage />}
       />
 
       <Route
