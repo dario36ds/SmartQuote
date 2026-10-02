@@ -48,6 +48,10 @@ export default function QuotesPage() {
   const filteredQuotes = customerId
     ? quotes.filter((quote) => String(quote.customer) === customerId)
     : quotes;
+  const previewTotal = items.reduce((total, item) => {
+    const lineTotal = Number(item.quantity) * Number(item.unit_price);
+    return total + (Number.isFinite(lineTotal) ? lineTotal : 0);
+  }, 0);
 
   useEffect(() => {
     let active = true;
@@ -404,6 +408,16 @@ export default function QuotesPage() {
             Aggiungi voce
           </button>
 
+          <p aria-live="polite">
+            Totale provvisorio:{" "}
+            <strong>
+              {previewTotal.toLocaleString("it-IT", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </strong>
+          </p>
+
           <button type="submit">
             {saving ? "Salvataggio..." : isEditing ? "Salva modifiche" : "Crea preventivo"}
           </button>
@@ -438,6 +452,7 @@ export default function QuotesPage() {
           <thead>
             <tr>
               <th scope="col">Titolo</th>
+              <th scope="col">Voci</th>
               <th scope="col">Stato</th>
               <th scope="col">Totale</th>
               <th scope="col">Tempo di consegna</th>
@@ -448,6 +463,34 @@ export default function QuotesPage() {
             {filteredQuotes.map((quote) => (
               <tr key={quote.id}>
                 <td>{quote.title}</td>
+                <td>
+                  {quote.items.length === 0 ? (
+                    <p>Nessuna voce.</p>
+                  ) : (
+                    <ul>
+                      {quote.items.map((item) => (
+                        <li key={item.id}>
+                          <strong>{item.description}</strong>
+                          <p>
+                            Quantità: {Number(item.quantity).toLocaleString("it-IT", {
+                              maximumFractionDigits: 2,
+                            })}
+                            <br />
+                            Prezzo unitario: {Number(item.unit_price).toLocaleString("it-IT", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                            <br />
+                            Totale voce: {Number(item.total).toLocaleString("it-IT", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </td>
                 <td>{STATUS_LABELS[quote.status] || quote.status}</td>
                 <td>
                   {Number(quote.total).toLocaleString("it-IT", {
