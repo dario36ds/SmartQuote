@@ -1,6 +1,8 @@
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
@@ -18,13 +20,42 @@ class QuoteViewSet(ModelViewSet):
     serializer_class = QuoteSerializer
 
     def get_queryset(self):
-        return (
+        queryset = (
             Quote.objects
             .filter(customer__user=self.request.user)
             .select_related("customer")
             .prefetch_related("items")
             .order_by("-created_at")
         )
+
+        if self.action in ("update", "partial_update", "destroy", "publish"):
+            queryset = queryset.select_for_update(of=("self",))
+
+        return queryset
+
+    def get_object(self):
+        quote = super().get_object()
+
+        if (
+            self.action in ("update", "partial_update", "generate_text")
+            and quote.status != Quote.Status.DRAFT
+        ):
+            raise ValidationError({
+                "detail": (
+                    "Solo i preventivi in bozza possono essere modificati "
+                    "o rigenerati con AI."
+                )
+            })
+
+        return quote
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @transaction.atomic
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
     
     @action(
         detail=True,
@@ -69,6 +100,7 @@ class QuoteViewSet(ModelViewSet):
         })
 
     @action(detail=True, methods=["post"])
+    @transaction.atomic
     def publish(self, request, pk=None):
         quote = self.get_object()
 
