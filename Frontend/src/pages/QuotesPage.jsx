@@ -34,6 +34,7 @@ export default function QuotesPage() {
   const [quoteForm, setQuoteForm] = useState({
     customer: "",
     title: "",
+    description: "",
     delivery_time: "",
   });
   const [items, setItems] = useState(() => [createEmptyItem()]);
@@ -43,8 +44,24 @@ export default function QuotesPage() {
   const [editingId, setEditingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
-  const busy = saving || deletingId !== null;
+  const [tone, setTone] = useState("professional");
+  const [generating, setGenerating] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const busy = saving || deletingId !== null || generating;
   const isEditing = editingId !== null;
+  const savedQuote = quotes.find((quote) => quote.id === editingId);
+  const hasUnsavedData = isEditing && (
+    !savedQuote ||
+    String(savedQuote.customer) !== quoteForm.customer ||
+    savedQuote.title !== quoteForm.title ||
+    savedQuote.delivery_time !== quoteForm.delivery_time ||
+    savedQuote.items.length !== items.length ||
+    items.some((item, index) =>
+      item.description !== savedQuote.items[index].description ||
+      Number(item.quantity) !== Number(savedQuote.items[index].quantity) ||
+      Number(item.unit_price) !== Number(savedQuote.items[index].unit_price)
+    )
+  );
   const filteredQuotes = customerId
     ? quotes.filter((quote) => String(quote.customer) === customerId)
     : quotes;
@@ -144,10 +161,11 @@ export default function QuotesPage() {
 
   function resetForm() {
     setEditingId(null);
-    setQuoteForm({ customer: "", title: "", delivery_time: "" });
+    setQuoteForm({ customer: "", title: "", description: "", delivery_time: "" });
     setItems([createEmptyItem()]);
     setFormError("");
     setFormSuccess("");
+    setAiError("");
   }
 
   function handleEdit(quote) {
@@ -159,6 +177,7 @@ export default function QuotesPage() {
     setQuoteForm({
       customer: String(quote.customer),
       title: quote.title,
+      description: quote.description,
       delivery_time: quote.delivery_time,
     });
     setItems(quote.items.length > 0
@@ -172,6 +191,31 @@ export default function QuotesPage() {
     );
     setFormError("");
     setFormSuccess("");
+    setAiError("");
+  }
+
+  async function handleGenerateText() {
+    if (busy || !isEditing || hasUnsavedData) {
+      return;
+    }
+
+    setGenerating(true);
+    setAiError("");
+    setFormSuccess("");
+
+    try {
+      const data = await apiRequest(`/quotes/${editingId}/generate-text/`, {
+        method: "POST",
+        token,
+        body: { tone },
+      });
+
+      setQuoteForm((current) => ({ ...current, description: data.generated_text }));
+    } catch (err) {
+      setAiError(err.message);
+    } finally {
+      setGenerating(false);
+    }
   }
 
   async function handleSubmit(event) {
@@ -215,6 +259,7 @@ export default function QuotesPage() {
       setFormError(
         err.data?.customer?.[0] ||
           err.data?.title?.[0] ||
+          err.data?.description?.[0] ||
           err.data?.delivery_time?.[0] ||
           itemError?.description?.[0] ||
           itemError?.quantity?.[0] ||
@@ -348,6 +393,47 @@ export default function QuotesPage() {
               maxLength={150}
             />
           </div>
+
+          <div>
+            <label htmlFor="quote-description">Descrizione (facoltativa)</label>
+            <textarea
+              id="quote-description"
+              name="description"
+              rows={5}
+              value={quoteForm.description}
+              onChange={handleQuoteChange}
+            />
+          </div>
+
+          {isEditing && (
+            <div>
+              <label htmlFor="quote-tone">Tono del testo</label>
+              <select
+                id="quote-tone"
+                value={tone}
+                onChange={(event) => setTone(event.target.value)}
+              >
+                <option value="professional">Professionale</option>
+                <option value="friendly">Cordiale</option>
+                <option value="concise">Sintetico</option>
+                <option value="commercial">Commerciale</option>
+              </select>
+
+              <button
+                type="button"
+                disabled={hasUnsavedData}
+                onClick={handleGenerateText}
+              >
+                {generating ? "Generazione in corso..." : "Genera testo con AI"}
+              </button>
+
+              {hasUnsavedData && (
+                <p>Salva le modifiche ai dati e alle voci prima di generare il testo.</p>
+              )}
+              <p>Rivedi il testo nella descrizione e premi Salva modifiche per salvarlo.</p>
+              {aiError && <p role="alert">{aiError}</p>}
+            </div>
+          )}
 
           {items.map((item, index) => (
             <fieldset key={item.key}>
