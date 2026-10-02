@@ -47,7 +47,9 @@ export default function QuotesPage() {
   const [tone, setTone] = useState("professional");
   const [generating, setGenerating] = useState(false);
   const [aiError, setAiError] = useState("");
-  const busy = saving || deletingId !== null || generating;
+  const [publishingId, setPublishingId] = useState(null);
+  const [publishError, setPublishError] = useState("");
+  const busy = saving || deletingId !== null || generating || publishingId !== null;
   const isEditing = editingId !== null;
   const savedQuote = quotes.find((quote) => quote.id === editingId);
   const hasUnsavedData = isEditing && (
@@ -61,6 +63,9 @@ export default function QuotesPage() {
       Number(item.quantity) !== Number(savedQuote.items[index].quantity) ||
       Number(item.unit_price) !== Number(savedQuote.items[index].unit_price)
     )
+  );
+  const hasUnsavedChanges = hasUnsavedData || (
+    isEditing && savedQuote?.description !== quoteForm.description
   );
   const filteredQuotes = customerId
     ? quotes.filter((quote) => String(quote.customer) === customerId)
@@ -270,6 +275,30 @@ export default function QuotesPage() {
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handlePublish(quote) {
+    if (busy || quote.status !== "DRAFT" || (editingId === quote.id && hasUnsavedChanges)) {
+      return;
+    }
+
+    setPublishError("");
+    setPublishingId(quote.id);
+
+    try {
+      const publishedQuote = await apiRequest(`/quotes/${quote.id}/publish/`, {
+        method: "POST",
+        token,
+      });
+
+      setQuotes((current) => current.map((item) =>
+        item.id === publishedQuote.id ? publishedQuote : item
+      ));
+    } catch (err) {
+      setPublishError(err.message);
+    } finally {
+      setPublishingId(null);
     }
   }
 
@@ -524,6 +553,7 @@ export default function QuotesPage() {
 
       {!loading && error && <p role="alert">{error}</p>}
       {deleteError && <p role="alert">{deleteError}</p>}
+      {publishError && <p role="alert">{publishError}</p>}
 
       {!loading && !error && filteredQuotes.length === 0 && (
         <p>
@@ -586,6 +616,20 @@ export default function QuotesPage() {
                 </td>
                 <td>{quote.delivery_time || "—"}</td>
                 <td>
+                  {quote.status === "DRAFT" && (
+                    <>
+                      <button
+                        type="button"
+                        disabled={busy || (editingId === quote.id && hasUnsavedChanges)}
+                        onClick={() => handlePublish(quote)}
+                      >
+                        {publishingId === quote.id ? "Pubblicazione..." : "Pubblica"}
+                      </button>
+                      {editingId === quote.id && hasUnsavedChanges && (
+                        <p>Salva o annulla le modifiche prima di pubblicare.</p>
+                      )}
+                    </>
+                  )}
                   <button
                     type="button"
                     disabled={busy || customersLoading || Boolean(customersError) || customers.length === 0}
