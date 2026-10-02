@@ -13,6 +13,15 @@ const STATUS_LABELS = {
   REJECTED: "Rifiutato",
 };
 
+function createEmptyItem() {
+  return {
+    key: crypto.randomUUID(),
+    description: "",
+    quantity: "1",
+    unit_price: "",
+  };
+}
+
 export default function QuotesPage() {
   const { token } = useAuth();
   const [quotes, setQuotes] = useState([]);
@@ -22,6 +31,15 @@ export default function QuotesPage() {
   const [customersLoading, setCustomersLoading] = useState(true);
   const [customersError, setCustomersError] = useState("");
   const [customerId, setCustomerId] = useState("");
+  const [quoteForm, setQuoteForm] = useState({
+    customer: "",
+    title: "",
+    delivery_time: "",
+  });
+  const [items, setItems] = useState(() => [createEmptyItem()]);
+  const [saving, setSaving] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [createSuccess, setCreateSuccess] = useState(false);
   const filteredQuotes = customerId
     ? quotes.filter((quote) => String(quote.customer) === customerId)
     : quotes;
@@ -82,6 +100,78 @@ export default function QuotesPage() {
     };
   }, [token]);
 
+  function handleQuoteChange(event) {
+    const { name, value } = event.target;
+    setQuoteForm((current) => ({ ...current, [name]: value }));
+    setCreateSuccess(false);
+  }
+
+  function handleItemChange(itemKey, event) {
+    const { name, value } = event.target;
+    setItems((current) => current.map((item) =>
+      item.key === itemKey ? { ...item, [name]: value } : item
+    ));
+    setCreateSuccess(false);
+  }
+
+  function handleAddItem() {
+    const item = createEmptyItem();
+    setItems((current) => [...current, item]);
+    setCreateSuccess(false);
+  }
+
+  async function handleCreate(event) {
+    event.preventDefault();
+
+    if (saving || loading || error) {
+      return;
+    }
+
+    setSaving(true);
+    setCreateError("");
+    setCreateSuccess(false);
+
+    try {
+      const quote = await apiRequest("/quotes/", {
+        method: "POST",
+        token,
+        body: {
+          ...quoteForm,
+          customer: Number(quoteForm.customer),
+          items: items.map(({ description, quantity, unit_price }) => ({
+            description,
+            quantity,
+            unit_price,
+          })),
+        },
+      });
+
+      setQuotes((current) => [quote, ...current]);
+      setQuoteForm({ customer: "", title: "", delivery_time: "" });
+      setItems([createEmptyItem()]);
+      setCreateSuccess(true);
+    } catch (err) {
+      const itemErrors = Array.isArray(err.data?.items) ? err.data.items : [];
+      const itemError = itemErrors.find((item) =>
+        item?.description?.[0] || item?.quantity?.[0] || item?.unit_price?.[0]
+      );
+
+      setCreateError(
+        err.data?.customer?.[0] ||
+          err.data?.title?.[0] ||
+          err.data?.delivery_time?.[0] ||
+          itemError?.description?.[0] ||
+          itemError?.quantity?.[0] ||
+          itemError?.unit_price?.[0] ||
+          (typeof itemErrors[0] === "string" ? itemErrors[0] : "") ||
+          err.data?.non_field_errors?.[0] ||
+          err.message
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <AuthenticatedLayout>
       <h2>Preventivi</h2>
@@ -119,6 +209,117 @@ export default function QuotesPage() {
           </div>
         )}
       </section>
+
+      {!customersLoading && !customersError && customers.length > 0 && (
+        <form
+          aria-labelledby="new-quote-heading"
+          onSubmit={handleCreate}
+        >
+          <h3 id="new-quote-heading">Nuovo preventivo</h3>
+
+          <fieldset disabled={saving || loading || Boolean(error)}>
+            <legend>Dati del preventivo</legend>
+
+          <div>
+            <label htmlFor="new-quote-customer">Cliente del preventivo</label>
+            <select
+              id="new-quote-customer"
+              name="customer"
+              value={quoteForm.customer}
+              onChange={handleQuoteChange}
+              required
+            >
+              <option value="">Seleziona un cliente</option>
+              {customers.map((customer) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.name}{customer.company ? ` — ${customer.company}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="new-quote-title">Titolo</label>
+            <input
+              id="new-quote-title"
+              name="title"
+              value={quoteForm.title}
+              onChange={handleQuoteChange}
+              maxLength={200}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="new-quote-delivery">Tempo di consegna (facoltativo)</label>
+            <input
+              id="new-quote-delivery"
+              name="delivery_time"
+              value={quoteForm.delivery_time}
+              onChange={handleQuoteChange}
+              maxLength={150}
+            />
+          </div>
+
+          {items.map((item, index) => (
+            <fieldset key={item.key}>
+              <legend>Voce {index + 1}</legend>
+
+              <div>
+                <label htmlFor={`item-description-${item.key}`}>Servizio</label>
+                <input
+                  id={`item-description-${item.key}`}
+                  name="description"
+                  value={item.description}
+                  onChange={(event) => handleItemChange(item.key, event)}
+                  maxLength={255}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor={`item-quantity-${item.key}`}>Quantità</label>
+                <input
+                  id={`item-quantity-${item.key}`}
+                  name="quantity"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={item.quantity}
+                  onChange={(event) => handleItemChange(item.key, event)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor={`item-price-${item.key}`}>Prezzo unitario</label>
+                <input
+                  id={`item-price-${item.key}`}
+                  name="unit_price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={item.unit_price}
+                  onChange={(event) => handleItemChange(item.key, event)}
+                  required
+                />
+              </div>
+            </fieldset>
+          ))}
+
+          <button type="button" onClick={handleAddItem}>
+            Aggiungi voce
+          </button>
+
+          <button type="submit">
+            {saving ? "Salvataggio..." : "Crea preventivo"}
+          </button>
+          </fieldset>
+
+          {createError && <p role="alert">{createError}</p>}
+          {createSuccess && <p role="status">Preventivo creato.</p>}
+        </form>
+      )}
 
       {loading && <p>Caricamento preventivi...</p>}
 
