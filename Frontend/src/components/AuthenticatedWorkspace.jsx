@@ -3,8 +3,9 @@ import { Link, NavLink } from "react-router";
 
 import { useAuth } from "../context/AuthContext";
 import Icon from "./Icon";
+import "./AuthenticatedWorkspace.css";
 
-export default function CustomerWorkspace({ children, search, onSearch }) {
+export default function AuthenticatedWorkspace({ children, variant, search, onSearch, onNewQuote }) {
   const { user, logout } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
   const username = user?.username || "Utente";
@@ -20,7 +21,7 @@ export default function CustomerWorkspace({ children, search, onSearch }) {
   }
 
   return (
-    <div className="customer-workspace">
+    <div className={`sq-workspace ${variant === "quotes" ? "quote-workspace" : "customer-workspace"}`}>
       <aside className="sq-sidebar">
         <Link to="/" className="sq-brand" aria-label="SmartQuote, dashboard">
           <span className="sq-brand-mark"><Icon name="quote" size={23} /></span>
@@ -42,10 +43,14 @@ export default function CustomerWorkspace({ children, search, onSearch }) {
         <header className="sq-topbar">
           <label className="sq-search sq-global-search">
             <Icon name="search" size={24} />
-            <input type="search" aria-label="Cerca clienti" placeholder="Cerca tra i tuoi clienti…" value={search} onChange={(event) => onSearch(event.target.value)} />
+            <input type="search" aria-label={variant === "quotes" ? "Cerca preventivi" : "Cerca clienti"} placeholder={variant === "quotes" ? "Cerca tra i tuoi preventivi…" : "Cerca tra i tuoi clienti…"} value={search} onChange={(event) => onSearch(event.target.value)} />
           </label>
           <div className="sq-topbar-actions">
-            <Link to="/quotes" className="sq-button sq-button-primary sq-new-quote" aria-label="Nuovo Preventivo"><Icon name="plus" /><span>Nuovo Preventivo</span></Link>
+            {onNewQuote ? (
+              <button type="button" className="sq-button sq-button-primary sq-new-quote" onClick={onNewQuote} aria-label="Nuovo Preventivo"><Icon name="plus" /><span>Nuovo Preventivo</span></button>
+            ) : (
+              <Link to="/quotes" className="sq-button sq-button-primary sq-new-quote" aria-label="Nuovo Preventivo"><Icon name="plus" /><span>Nuovo Preventivo</span></Link>
+            )}
             <details className="sq-notifications">
               <summary className="sq-icon-button" aria-label="Notifiche"><Icon name="bell" size={25} /></summary>
               <div className="sq-notification-panel"><strong>Notifiche</strong><p>Le notifiche non sono ancora disponibili.</p></div>

@@ -23,6 +23,14 @@ import {
   MdOutlineTrendingUp,
   MdOutlineTune,
   MdOutlineVisibility,
+  MdOutlineCalendarMonth,
+  MdOutlineContentCopy,
+  MdOutlineOpenInNew,
+  MdOutlineSave,
+  MdOutlineSend,
+  MdOutlineExpandLess,
+  MdOutlineExpandMore,
+  MdOutlineRefresh,
 } from "react-icons/md";
 
 const icons = {
@@ -50,6 +58,14 @@ const icons = {
   trash: MdOutlineDelete,
   close: MdOutlineClose,
   logout: MdOutlineLogout,
+  calendar: MdOutlineCalendarMonth,
+  copy: MdOutlineContentCopy,
+  external: MdOutlineOpenInNew,
+  save: MdOutlineSave,
+  send: MdOutlineSend,
+  collapse: MdOutlineExpandLess,
+  expand: MdOutlineExpandMore,
+  refresh: MdOutlineRefresh,
 };
 
 export default function Icon({ name, size = 20, className = "" }) {
