@@ -10,6 +10,7 @@ export default function AuthenticatedWorkspace({ children, variant, search, onSe
   const [loggingOut, setLoggingOut] = useState(false);
   const username = user?.username || "Utente";
   const initials = username.split(/[\s._-]+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
+  const searchLabel = variant === "dashboard" ? "Cerca preventivi e clienti" : variant === "quotes" ? "Cerca preventivi" : "Cerca clienti";
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -21,7 +22,7 @@ export default function AuthenticatedWorkspace({ children, variant, search, onSe
   }
 
   return (
-    <div className={`sq-workspace ${variant === "quotes" ? "quote-workspace" : "customer-workspace"}`}>
+    <div className={`sq-workspace ${variant === "dashboard" ? "dashboard-workspace" : variant === "quotes" ? "quote-workspace" : "customer-workspace"}`}>
       <aside className="sq-sidebar">
         <Link to="/" className="sq-brand" aria-label="SmartQuote, dashboard">
           <span className="sq-brand-mark"><Icon name="quote" size={23} /></span>
@@ -43,7 +44,7 @@ export default function AuthenticatedWorkspace({ children, variant, search, onSe
         <header className="sq-topbar">
           <label className="sq-search sq-global-search">
             <Icon name="search" size={24} />
-            <input type="search" aria-label={variant === "quotes" ? "Cerca preventivi" : "Cerca clienti"} placeholder={variant === "quotes" ? "Cerca tra i tuoi preventivi…" : "Cerca tra i tuoi clienti…"} value={search} onChange={(event) => onSearch(event.target.value)} />
+            <input type="search" aria-label={searchLabel} placeholder={`${searchLabel}…`} value={search} onChange={(event) => onSearch(event.target.value)} />
           </label>
           <div className="sq-topbar-actions">
             {onNewQuote ? (

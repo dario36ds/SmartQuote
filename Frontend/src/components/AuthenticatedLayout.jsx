@@ -10,7 +10,7 @@ export default function AuthenticatedLayout({ children, variant, search, onSearc
     await logout();
   }
 
-  if (variant === "customers" || variant === "quotes") {
+  if (["customers", "quotes", "dashboard"].includes(variant)) {
     return <AuthenticatedWorkspace variant={variant} search={search} onSearch={onSearch} onNewQuote={onNewQuote}>{children}</AuthenticatedWorkspace>;
   }
 

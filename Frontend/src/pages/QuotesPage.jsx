@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 
 import { apiRequest } from "../api";
 import AuthenticatedLayout from "../components/AuthenticatedLayout";
@@ -45,13 +45,15 @@ function PanelHeading({ step, title, subtitle, children }) {
 
 export default function QuotesPage() {
   const { token } = useAuth();
+  const [searchParams] = useSearchParams();
+  const requestedQuoteId = searchParams.get("quote");
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [customers, setCustomers] = useState([]);
   const [customersLoading, setCustomersLoading] = useState(true);
   const [customersError, setCustomersError] = useState("");
-  const [customerId, setCustomerId] = useState("");
+  const [customerId, setCustomerId] = useState(() => searchParams.get("customer") || "");
   const [quoteForm, setQuoteForm] = useState({ ...EMPTY_QUOTE });
   const [items, setItems] = useState(() => [createEmptyItem()]);
   const [saving, setSaving] = useState(false);
@@ -66,7 +68,7 @@ export default function QuotesPage() {
   const [publishingId, setPublishingId] = useState(null);
   const [publishError, setPublishError] = useState("");
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState(() => STATUS_LABELS[searchParams.get("status")] ? searchParams.get("status") : "");
   const [sort, setSort] = useState("recent");
   const [page, setPage] = useState(1);
   const [editorOpen, setEditorOpen] = useState(true);
@@ -120,7 +122,15 @@ export default function QuotesPage() {
     async function loadQuotes() {
       try {
         const data = await apiRequest("/quotes/", { token });
-        if (active) setQuotes(data);
+        if (active) {
+          setQuotes(data);
+          const requestedQuote = data.find((quote) => String(quote.id) === requestedQuoteId);
+          if (requestedQuote) {
+            setEditingId(requestedQuote.id);
+            setQuoteForm({ customer: String(requestedQuote.customer), title: requestedQuote.title, description: requestedQuote.description, delivery_time: requestedQuote.delivery_time });
+            setItems(requestedQuote.items.length ? requestedQuote.items.map((item) => ({ key: crypto.randomUUID(), description: item.description, quantity: item.quantity, unit_price: item.unit_price })) : [createEmptyItem()]);
+          }
+        }
       } catch (err) {
         if (active) setError(err.message);
       } finally {
@@ -140,7 +150,7 @@ export default function QuotesPage() {
     loadQuotes();
     loadCustomers();
     return () => { active = false; };
-  }, [token]);
+  }, [token, requestedQuoteId]);
 
   useEffect(() => {
     const dialog = previewRef.current;
