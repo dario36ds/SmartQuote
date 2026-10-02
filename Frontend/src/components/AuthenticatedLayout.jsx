@@ -1,3 +1,5 @@
+import { NavLink } from "react-router";
+
 import { useAuth } from "../context/AuthContext";
 
 export default function AuthenticatedLayout({ children }) {
@@ -15,6 +17,12 @@ export default function AuthenticatedLayout({ children }) {
         <p>
           Benvenuto, <strong>{user?.username}</strong>
         </p>
+
+        <nav aria-label="Navigazione principale">
+          <NavLink to="/" end>Dashboard</NavLink>
+          {" | "}
+          <NavLink to="/customers">Clienti</NavLink>
+        </nav>
 
         <button type="button" onClick={handleLogout}>
           Esci

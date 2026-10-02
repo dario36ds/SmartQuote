@@ -4,6 +4,7 @@ import {
 } from "react-router";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import CustomersPage from "./pages/CustomersPage";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -19,6 +20,15 @@ export default function App() {
       <Route
         path="/register"
         element={<RegisterPage />}
+      />
+
+      <Route
+        path="/customers"
+        element={
+          <ProtectedRoute>
+            <CustomersPage />
+          </ProtectedRoute>
+        }
       />
 
       <Route
