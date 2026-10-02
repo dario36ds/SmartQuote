@@ -1,12 +1,17 @@
 import { NavLink } from "react-router";
 
 import { useAuth } from "../context/AuthContext";
+import CustomerWorkspace from "./CustomerWorkspace";
 
-export default function AuthenticatedLayout({ children }) {
+export default function AuthenticatedLayout({ children, variant, search, onSearch }) {
   const { user, logout } = useAuth();
 
   async function handleLogout() {
     await logout();
+  }
+
+  if (variant === "customers") {
+    return <CustomerWorkspace search={search} onSearch={onSearch}>{children}</CustomerWorkspace>;
   }
 
   return (
