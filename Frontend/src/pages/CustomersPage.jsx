@@ -21,7 +21,10 @@ export default function CustomersPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
   const isEditing = editingId !== null;
+  const busy = saving || deletingId !== null;
 
   useEffect(() => {
     let active = true;
@@ -77,7 +80,7 @@ export default function CustomersPage() {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (saving) {
+    if (busy) {
       return;
     }
 
@@ -116,6 +119,40 @@ export default function CustomersPage() {
     }
   }
 
+  async function handleDelete(customer) {
+    if (busy) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Vuoi eliminare il cliente "${customer.name}"? Verranno eliminati anche i suoi preventivi.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleteError("");
+    setDeletingId(customer.id);
+
+    try {
+      await apiRequest(`/customers/${customer.id}/`, {
+        method: "DELETE",
+        token,
+      });
+
+      setCustomers((current) => current.filter((item) => item.id !== customer.id));
+
+      if (editingId === customer.id) {
+        handleCancelEdit();
+      }
+    } catch (err) {
+      setDeleteError(err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <AuthenticatedLayout>
       <h2>Clienti</h2>
@@ -123,12 +160,13 @@ export default function CustomersPage() {
       {loading && <p>Caricamento clienti...</p>}
 
       {!loading && error && <p role="alert">{error}</p>}
+      {deleteError && <p role="alert">{deleteError}</p>}
 
       {!loading && !error && (
         <form onSubmit={handleSubmit}>
           <h3>{isEditing ? "Modifica cliente" : "Nuovo cliente"}</h3>
 
-          <fieldset disabled={saving}>
+          <fieldset disabled={busy}>
             <legend>Dati del cliente</legend>
 
             <div>
@@ -230,10 +268,17 @@ export default function CustomersPage() {
                 <td>
                   <button
                     type="button"
-                    disabled={saving}
+                    disabled={busy}
                     onClick={() => handleEdit(customer)}
                   >
                     Modifica
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => handleDelete(customer)}
+                  >
+                    {deletingId === customer.id ? "Eliminazione..." : "Elimina"}
                   </button>
                 </td>
               </tr>
