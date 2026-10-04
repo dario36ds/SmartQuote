@@ -199,7 +199,7 @@ OLLAMA_BASE_URL = os.getenv(
 
 OLLAMA_MODEL = os.getenv(
     "OLLAMA_MODEL",
-    "mistral-small3.1:24b-instruct-2503-q4_K_M",
+    "qwen2.5:14b-instruct",
 )
 
 CORS_ALLOWED_ORIGINS = [
