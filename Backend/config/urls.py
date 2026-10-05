@@ -35,5 +35,6 @@ urlpatterns = [
         "api/quotes/",
         include("quotes.urls"),
     ),
+    path("api/notifications/", include("quotes.notification_urls")),
     
 ]

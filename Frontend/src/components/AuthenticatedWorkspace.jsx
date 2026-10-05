@@ -3,6 +3,7 @@ import { Link, NavLink } from "react-router";
 
 import { useAuth } from "../context/AuthContext";
 import Icon from "./Icon";
+import NotificationBell from "./NotificationBell";
 import "./AuthenticatedWorkspace.css";
 
 export default function AuthenticatedWorkspace({ children, variant, search, onSearch, onNewQuote }) {
@@ -52,10 +53,7 @@ export default function AuthenticatedWorkspace({ children, variant, search, onSe
             ) : (
               <Link to="/quotes" className="sq-button sq-button-primary sq-new-quote" aria-label="Nuovo preventivo"><Icon name="plus" /><span>Nuovo preventivo</span></Link>
             )}
-            <details className="sq-notifications">
-              <summary className="sq-icon-button" aria-label="Notifiche"><Icon name="bell" size={25} /></summary>
-              <div className="sq-notification-panel"><strong>Notifiche</strong><p>Le notifiche non sono ancora disponibili.</p></div>
-            </details>
+            <NotificationBell />
             <details className="sq-account">
               <summary aria-label={`Account di ${username}`}>
                 <span className="sq-profile-avatar">{initials}</span>

@@ -11,9 +11,12 @@ SmartQuote è un’applicazione per creare e gestire preventivi commerciali, org
 - **Condivisione:** pubblicazione di un link cliente, copia del link e preparazione di messaggi per email o WhatsApp. L’invio viene confermato nell’app scelta.
 - **Area cliente:** consultazione del preventivo senza account e accettazione o rifiuto con conferma.
 - **Dashboard:** valore accettato, preventivi attivi, tasso di accettazione, clienti totali, andamento mensile, distribuzione degli stati e clienti in evidenza.
+- **Notifiche:** accettazioni e rifiuti compaiono nella campanella, anche su mobile, con contatore delle notifiche non lette. Puoi aprire il preventivo o segnare tutte le notifiche come lette. L’app controlla le nuove risposte ogni 30 secondi mentre è visibile, al ritorno nella finestra e all’apertura della campanella; un avviso segnala le nuove risposte rilevate durante l’uso.
 - **Interfaccia:** stile condiviso tra le pagine, elenchi a schede su mobile, finestre di conferma per le eliminazioni e skeleton per generazione AI, dashboard, clienti, preventivi, pagina pubblica e caricamento della sessione. Le animazioni rispettano la preferenza “riduci movimento”.
 
 Il ciclo del preventivo comprende gli stati **Bozza**, **Inviato**, **Visualizzato**, **Accettato** e **Rifiutato**. Solo le bozze possono essere modificate o rigenerate con AI. La pubblicazione rende disponibile il link pubblico e passa il preventivo a “Inviato”; la prima apertura dell’area cliente lo passa a “Visualizzato”.
+
+Le notifiche e il loro stato di lettura vengono conservati nel database per il proprietario del preventivo. La campanella mostra le ultime 50 notifiche e conta tutte quelle non lette. Se elimini un preventivo, il riepilogo della notifica rimane consultabile. La migrazione `quotes/0002_quotenotification` include anche le risposte già registrate.
 
 ## Tecnologie e struttura
 
@@ -175,6 +178,9 @@ Le API private richiedono l’header `Authorization: Token <token>`. Clienti e p
 | `/api/quotes/:id/publish/` | `POST`: pubblicazione della bozza. |
 | `/api/quotes/public/:token/` | `GET`: consultazione pubblica tramite token UUID. |
 | `/api/quotes/public/:token/accept/`, `/api/quotes/public/:token/reject/` | `POST`: risposta del cliente. |
+| `/api/notifications/` | `GET`: ultime 50 notifiche dell’utente e conteggio delle non lette. |
+| `/api/notifications/:id/read/` | `POST`: segna una notifica come letta. |
+| `/api/notifications/read-all/` | `POST`: segna tutte le notifiche dell’utente come lette. |
 
 Le API pubbliche del preventivo non richiedono autenticazione. La generazione AI restituisce `generated_text` senza salvarlo automaticamente nella descrizione.
 
@@ -193,6 +199,8 @@ Controlli e test backend, dalla cartella `Backend`, con PostgreSQL configurato e
 uv run manage.py check
 uv run manage.py test
 ```
+
+I test dei preventivi verificano creazione e lettura delle notifiche, isolamento tra utenti, recupero delle risposte precedenti e gestione di accettazioni e rifiuti simultanei su PostgreSQL. Dopo un aggiornamento, applica le nuove migrazioni con `uv run manage.py migrate`; nell’avvio Docker vengono applicate automaticamente dal backend.
 
 ## Problemi comuni
 

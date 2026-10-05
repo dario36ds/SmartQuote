@@ -1,6 +1,8 @@
 import uuid
 
+from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from customers.models import Customer
 
@@ -81,3 +83,32 @@ class QuoteItem(models.Model):
     @property
     def total(self):
         return self.quantity * self.unit_price
+
+
+class QuoteNotification(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="quote_notifications",
+    )
+    quote = models.OneToOneField(
+        Quote,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="response_notification",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            (Quote.Status.ACCEPTED, "Accettato"),
+            (Quote.Status.REJECTED, "Rifiutato"),
+        ],
+    )
+    quote_title = models.CharField(max_length=200)
+    customer_name = models.CharField(max_length=150)
+    created_at = models.DateTimeField(default=timezone.now)
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        indexes = [models.Index(fields=["user", "read_at", "-created_at"])]

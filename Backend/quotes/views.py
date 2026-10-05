@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
-from .models import Quote
+from .models import Quote, QuoteNotification
 from .serializers import QuoteSerializer
 from rest_framework.permissions import AllowAny
 from .serializers import PublicQuoteSerializer
@@ -132,10 +132,12 @@ class QuoteViewSet(ModelViewSet):
 class PublicQuoteView(APIView):
     permission_classes = [AllowAny]
 
+    @transaction.atomic
     def get(self, request, token):
         try:
             quote = (
                 Quote.objects
+                .select_for_update(of=("self",))
                 .select_related("customer")
                 .prefetch_related("items")
                 .get(public_token=token)
@@ -170,9 +172,10 @@ class PublicQuoteView(APIView):
 class AcceptQuoteView(APIView):
     permission_classes = [AllowAny]
 
+    @transaction.atomic
     def post(self, request, token):
         try:
-            quote = Quote.objects.get(
+            quote = Quote.objects.select_for_update(of=("self",)).select_related("customer").get(
                 public_token=token
             )
         except Quote.DoesNotExist:
@@ -202,6 +205,15 @@ class AcceptQuoteView(APIView):
             ]
         )
 
+        QuoteNotification.objects.create(
+            user_id=quote.customer.user_id,
+            quote=quote,
+            status=quote.status,
+            quote_title=quote.title,
+            customer_name=quote.customer.name,
+            created_at=quote.accepted_at,
+        )
+
         return Response(
             PublicQuoteSerializer(quote).data
         )
@@ -209,9 +221,10 @@ class AcceptQuoteView(APIView):
 class RejectQuoteView(APIView):
     permission_classes = [AllowAny]
 
+    @transaction.atomic
     def post(self, request, token):
         try:
-            quote = Quote.objects.get(
+            quote = Quote.objects.select_for_update(of=("self",)).select_related("customer").get(
                 public_token=token
             )
         except Quote.DoesNotExist:
@@ -239,6 +252,15 @@ class RejectQuoteView(APIView):
                 "status",
                 "rejected_at",
             ]
+        )
+
+        QuoteNotification.objects.create(
+            user_id=quote.customer.user_id,
+            quote=quote,
+            status=quote.status,
+            quote_title=quote.title,
+            customer_name=quote.customer.name,
+            created_at=quote.rejected_at,
         )
 
         return Response(

@@ -51,19 +51,16 @@ body:has(.sq-workspace) { margin: 0; background: var(--sq-bg); }
 .sq-new-quote { min-width: 235px; }
 .sq-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border-radius: 9px; background: var(--sq-soft); color: #6f6c85; }
 .sq-icon-button:hover { background: #e0e6ff; color: var(--sq-primary-dark); }
-.sq-notifications, .sq-account { position: relative; }
-.sq-notifications summary { width: 50px; height: 50px; color: var(--sq-text-secondary); list-style: none; }
-.sq-notifications summary::-webkit-details-marker, .sq-account summary::-webkit-details-marker { display: none; }
+.sq-account { position: relative; }
+.sq-account summary::-webkit-details-marker { display: none; }
 .sq-account summary { display: flex; align-items: center; gap: 10px; list-style: none; }
 .sq-profile-avatar { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; background: #e2dfff; color: #3323cc; font-weight: 700; font-size: 14px; }
 .sq-profile-name { display: flex; flex-direction: column; line-height: 1.4; }
 .sq-profile-name strong { font-size: 16px; font-weight: 600; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sq-profile-name small { font-size: 12px; letter-spacing: .3px; }
-.sq-account-panel, .sq-notification-panel { position: absolute; right: 0; top: calc(100% + 15px); min-width: 220px; padding: 18px; border: 1px solid #e7e9f4; border-radius: 12px; background: white; box-shadow: 0 12px 30px #23204814; font-size: 14px; }
+.sq-account-panel { position: absolute; right: 0; top: calc(100% + 15px); min-width: 220px; padding: 18px; border: 1px solid #e7e9f4; border-radius: 12px; background: white; box-shadow: 0 12px 30px #23204814; font-size: 14px; }
 .sq-account-panel > span { display: block; overflow-wrap: anywhere; color: var(--sq-muted); }
 .sq-account-panel button { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 12px; padding: 10px; background: var(--sq-soft); color: var(--sq-ink); border-radius: 7px; }
-.sq-notification-panel { width: 280px; }
-.sq-notification-panel p { margin-top: 8px; color: var(--sq-muted); }
 .sq-content { padding: 24px 30px 40px; }
 
 @media (min-width: 1440px) {
@@ -90,7 +87,6 @@ body:has(.sq-workspace) { margin: 0; background: var(--sq-bg); }
   .sq-navigation a { padding-inline: 16px; }
   .sq-engine { padding: 16px; }
   .sq-topbar { padding-inline: 20px; gap: 12px; }
-  .sq-notifications { display: none; }
   .sq-new-quote { font-size: 12px; gap: 4px; padding-inline: 12px; }
   .sq-search { padding-inline: 14px; }
   .sq-content { padding-inline: 20px; }
