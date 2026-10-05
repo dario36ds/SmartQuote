@@ -4,7 +4,7 @@ import { apiRequest } from "../api";
 import Icon from "../components/Icon";
 import "./PublicQuotePage.css";
 
-const money = (value) => Number(value).toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+const money = (value) => Number(value).toLocaleString("it-IT", { style: "currency", currency: "EUR", useGrouping: "always" });
 const date = (value) => value ? new Date(value).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" }) : null;
 
 export default function PublicQuotePage() {
@@ -82,7 +82,7 @@ function PublicQuote({ token }) {
         ) : <>
           <div className="pq-heading">
             <div><p className="pq-eyebrow">LA TUA PROPOSTA PERSONALIZZATA</p><h1>{quote.title}</h1><p>Consulta i dettagli e comunica la tua decisione direttamente da questa pagina.</p></div>
-            <span className={`pq-badge ${rejected ? "is-rejected" : ""}`}><Icon name={accepted ? "check" : rejected ? "close" : "document"} size={17} />{accepted ? "Accettato" : rejected ? "Rifiutato" : canRespond ? "In attesa di risposta" : "Non disponibile"}</span>
+            <span className={`pq-badge ${accepted ? "is-accepted" : rejected ? "is-rejected" : ""}`}><Icon name={accepted ? "check" : rejected ? "close" : "document"} size={17} />{accepted ? "Accettato" : rejected ? "Rifiutato" : canRespond ? "In attesa di risposta" : "Non disponibile"}</span>
           </div>
           {(accepted || rejected) && <section className={`pq-response ${rejected ? "is-rejected" : ""}`} role="status"><Icon name={accepted ? "check" : "close"} size={28} /><div><h2>{accepted ? "Hai accettato il preventivo" : "Hai rifiutato il preventivo"}</h2><p>La tua risposta è stata registrata{date(accepted ? quote.accepted_at : quote.rejected_at) ? ` il ${date(accepted ? quote.accepted_at : quote.rejected_at)}` : ""}. Puoi continuare a consultare i dettagli qui sotto.</p></div></section>}
           <div className="pq-layout">

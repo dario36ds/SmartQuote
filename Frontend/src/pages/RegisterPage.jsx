@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Link } from "react-router";
 
 import { apiRequest } from "../api";
+import PasswordInput from "../components/PasswordInput";
+import "./AuthPage.css";
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
@@ -44,70 +46,71 @@ export default function RegisterPage() {
   }
 
   return (
-    <main>
-      <h1>SmartQuote</h1>
-      <h2>Registrati</h2>
+    <main className="auth-page">
+      <section className="auth-card" aria-labelledby="register-heading">
+        <h1>SmartQuote</h1>
+        <h2 id="register-heading">Registrati</h2>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="username">Username</label>
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="username">Username</label>
 
-          <input
-            id="username"
-            name="username"
-            autoComplete="username"
-            disabled={loading || success}
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            required
-          />
-        </div>
+            <input
+              id="username"
+              name="username"
+              autoComplete="username"
+              disabled={loading || success}
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              required
+            />
+          </div>
 
-        <div>
-          <label htmlFor="email">Email (facoltativa)</label>
+          <div>
+            <label htmlFor="email">Email (facoltativa)</label>
 
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            disabled={loading || success}
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-        </div>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              disabled={loading || success}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </div>
 
-        <div>
-          <label htmlFor="password">Password (almeno 8 caratteri)</label>
+          <div>
+            <label htmlFor="password">Password (almeno 8 caratteri)</label>
 
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            disabled={loading || success}
-            minLength={8}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-        </div>
+            <PasswordInput
+              id="password"
+              name="password"
+              autoComplete="new-password"
+              disabled={loading || success}
+              minLength={8}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          </div>
 
-        {error && <p role="alert">{error}</p>}
+          {error && <p className="auth-feedback auth-error" role="alert">{error}</p>}
 
-        <button type="submit" disabled={loading || success}>
-          {loading ? "Registrazione..." : "Registrati"}
-        </button>
-      </form>
+          <button type="submit" disabled={loading || success}>
+            {loading ? "Registrazione..." : "Registrati"}
+          </button>
+        </form>
 
-      {success && (
-        <p role="status">Account creato. Ora puoi accedere.</p>
-      )}
+        {success && (
+          <p className="auth-feedback auth-success" role="status">Account creato. Ora puoi accedere.</p>
+        )}
 
-      <p>
-        Hai già un account?{" "}
-        <Link to="/login">Accedi</Link>
-      </p>
+        <p className="auth-switch">
+          Hai già un account?{" "}
+          <Link to="/login">Accedi</Link>
+        </p>
+      </section>
     </main>
   );
 }

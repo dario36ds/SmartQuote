@@ -7,6 +7,9 @@ import {
 } from "react-router";
 
 import { useAuth } from "../context/AuthContext";
+import Icon from "../components/Icon";
+import PasswordInput from "../components/PasswordInput";
+import "./AuthPage.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -45,58 +48,66 @@ export default function LoginPage() {
   }
 
   return (
-    <main>
-      <h1>SmartQuote</h1>
-      <h2>Accedi</h2>
+    <main className="auth-page">
+      <section className="auth-card" aria-labelledby="login-heading">
+        <h1 className="auth-brand">
+          <span className="auth-brand-mark"><Icon name="quote" size={28} /></span>
+          SmartQuote
+        </h1>
+        <h2 id="login-heading">Accedi</h2>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="username">
-            Username
-          </label>
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="username">
+              Username
+            </label>
 
-          <input
-            id="username"
-            value={username}
-            onChange={(event) =>
-              setUsername(event.target.value)
-            }
-            required
-          />
-        </div>
+            <input
+              id="username"
+              name="username"
+              autoComplete="username"
+              value={username}
+              onChange={(event) =>
+                setUsername(event.target.value)
+              }
+              required
+            />
+          </div>
 
-        <div>
-          <label htmlFor="password">
-            Password
-          </label>
+          <div>
+            <label htmlFor="password">
+              Password
+            </label>
 
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) =>
-              setPassword(event.target.value)
-            }
-            required
-          />
-        </div>
+            <PasswordInput
+              id="password"
+              name="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) =>
+                setPassword(event.target.value)
+              }
+              required
+            />
+          </div>
 
-        {error && <p>{error}</p>}
+          {error && <p className="auth-feedback auth-error" role="alert">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={loading}
-        >
-          {loading ? "Accesso..." : "Accedi"}
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Accesso..." : "Accedi"}
+          </button>
+        </form>
 
-      <p>
-        Non hai un account?{" "}
-        <Link to="/register">
-          Registrati
-        </Link>
-      </p>
+        <p className="auth-switch">
+          Non hai un account?{" "}
+          <Link to="/register">
+            Registrati
+          </Link>
+        </p>
+      </section>
     </main>
   );
 }

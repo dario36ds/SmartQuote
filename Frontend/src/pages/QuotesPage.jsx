@@ -338,7 +338,7 @@ export default function QuotesPage() {
   return (
     <AuthenticatedLayout variant="quotes" search={search} onSearch={updateSearch} onNewQuote={handleNewQuote}>
       <div className="quote-page-heading">
-        <div><nav className="quote-breadcrumb" aria-label="Percorso"><span>SmartQuote</span><Icon name="chevron" size={14} /><span aria-current="page">Preventivi</span></nav><h1>Gestione Preventivi</h1><p>Crea, gestisci e monitora le proposte commerciali con calcolo automatico degli importi e generazione testi AI.</p></div>
+        <div><nav className="quote-breadcrumb" aria-label="Percorso"><span>SmartQuote</span><Icon name="chevron" size={14} /><span aria-current="page">Preventivi</span></nav><h1>Gestione preventivi</h1><p>Crea, gestisci e monitora le proposte commerciali con calcolo automatico degli importi e generazione testi AI.</p></div>
         <section className="quote-overview" aria-label="Riepilogo preventivi">
           <article><Icon name="quote" size={22} /><div><span>Preventivi attivi</span><strong>{loading ? "…" : error ? "—" : `${activeQuotes.length} proposte`}</strong></div></article>
           <article><Icon name="money" size={22} /><div><span>Totale in pipeline</span><strong>{loading ? "…" : error ? "—" : amount(activeQuotes.reduce((total, quote) => total + Number(quote.total), 0))}</strong></div></article>
@@ -368,10 +368,10 @@ export default function QuotesPage() {
         <fieldset className="quote-editor-main" disabled={editorDisabled || isPublished}>
           <legend id="new-quote-heading" className="sq-visually-hidden">{isPublished ? "Consulta preventivo" : isEditing ? "Modifica preventivo" : "Nuovo preventivo"}</legend>
           <section className="quote-panel quote-general-panel">
-            <PanelHeading step="1" title="Dati Generali del Preventivo" subtitle="Intestazione, cliente e tempistiche"><StatusBadge status={savedQuote?.status || "DRAFT"} /></PanelHeading>
+            <PanelHeading step="1" title="Dati generali del preventivo" subtitle="Intestazione, cliente e tempistiche"><StatusBadge status={savedQuote?.status || "DRAFT"} /></PanelHeading>
             <div className="quote-form-grid">
               <label htmlFor="new-quote-customer"><span className="quote-label-row">Cliente del preventivo *<Link to="/customers"><Icon name="plus" size={13} />Nuovo cliente</Link></span><select id="new-quote-customer" name="customer" value={quoteForm.customer} onChange={handleQuoteChange} required><option value="">Seleziona un cliente</option>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}{customer.company ? ` (${customer.company})` : ""}</option>)}</select></label>
-              <label htmlFor="new-quote-title">Titolo del Preventivo *<input id="new-quote-title" name="title" value={quoteForm.title} onChange={handleQuoteChange} maxLength={200} placeholder="Es. Manutenzione e riparazione" required /></label>
+              <label htmlFor="new-quote-title">Titolo del preventivo *<input id="new-quote-title" name="title" value={quoteForm.title} onChange={handleQuoteChange} maxLength={200} placeholder="Es. Manutenzione e riparazione" required /></label>
               <label htmlFor="new-quote-delivery">Tempo di consegna stimato<span className="quote-input-icon"><Icon name="calendar" size={18} /><input id="new-quote-delivery" name="delivery_time" value={quoteForm.delivery_time} onChange={handleQuoteChange} maxLength={150} placeholder="Es. 5 giorni lavorativi" /></span></label>
               <div className="quote-readonly-field"><span>Stato del preventivo</span><div><Icon name="check" size={18} />{STATUS_LABELS[savedQuote?.status || "DRAFT"]}{isEditing && <small>#{editingId}</small>}</div></div>
               <label className="quote-field-full" htmlFor="quote-description">Descrizione dell’intervento / Note per il cliente (facoltativo)<textarea id="quote-description" name="description" rows={3} value={quoteForm.description} onChange={handleQuoteChange} placeholder="Descrivi i servizi e le informazioni da includere nel preventivo pubblico…" /></label>
@@ -379,7 +379,7 @@ export default function QuotesPage() {
           </section>
 
           <section className="quote-panel quote-items-panel">
-            <PanelHeading step="2" title="Voci di Costo e Servizi" subtitle="Dettaglio servizi, quantità e prezzi unitari"><span className="quote-panel-tag"><Icon name="document" size={14} />{items.length} {items.length === 1 ? "voce" : "voci"}</span></PanelHeading>
+            <PanelHeading step="2" title="Voci di costo e servizi" subtitle="Dettaglio servizi, quantità e prezzi unitari"><span className="quote-panel-tag"><Icon name="document" size={14} />{items.length} {items.length === 1 ? "voce" : "voci"}</span></PanelHeading>
             <div className="quote-items-head" aria-hidden="true"><span>Descrizione servizio / articolo</span><span>Quantità</span><span>Prezzo unit.</span><span>Totale voce</span><span /></div>
             <div className="quote-items">
               {items.map((item, index) => <div className="quote-item" key={item.key}>
@@ -405,7 +405,7 @@ export default function QuotesPage() {
           </section>
 
           <section className="quote-panel quote-ai-panel">
-            <PanelHeading step={<Icon name="sparkle" size={20} />} title="Testo di Presentazione Generato da AI" subtitle="Una descrizione personalizzata per il tuo cliente" />
+            <PanelHeading step={<Icon name="sparkle" size={20} />} title="Testo di presentazione generato da AI" subtitle="Una descrizione personalizzata per il tuo cliente" />
             <div className="quote-tone-options" role="group" aria-label="Tono del testo AI">{Object.entries(TONES).map(([value, label]) => <button key={value} type="button" aria-pressed={tone === value} className={tone === value ? "is-selected" : ""} onClick={() => setTone(value)}>{label}</button>)}</div>
             <div className="quote-ai-text"><blockquote>{quoteForm.description || "La descrizione del preventivo apparirà qui. Puoi scriverla nei dati generali oppure generarla con l’assistente AI."}</blockquote><button type="button" className="sq-icon-button" disabled={!quoteForm.description} aria-label="Copia descrizione" title="Copia descrizione" onClick={() => copyText(quoteForm.description, "Descrizione copiata.")}><Icon name="copy" size={17} /></button></div>
             <div className="quote-ai-actions"><p>{isPublished ? "Il testo di un preventivo pubblicato non può essere rigenerato." : "Puoi generare o rigenerare il testo in qualsiasi momento. Salviamo prima i dati in bozza; poi rivedi il testo e salva le modifiche."}</p><button type="button" className="sq-button sq-button-primary" disabled={editorDisabled || isPublished} onClick={handleGenerateText}><Icon name={generating ? "refresh" : "sparkle"} size={18} />{generating ? saving ? "Salvataggio bozza…" : "Generazione…" : "Genera testo AI"}</button></div>
@@ -415,11 +415,11 @@ export default function QuotesPage() {
 
         <aside className="quote-summary-column" aria-label="Riepilogo economico">
           <section className="quote-panel quote-economic-summary">
-            <div className="quote-summary-heading"><h2>Riepilogo<br />Economico</h2><span>{items.length} {items.length === 1 ? "voce" : "voci"}</span></div>
+            <div className="quote-summary-heading"><h2>Riepilogo economico</h2><span>{items.length} {items.length === 1 ? "voce" : "voci"}</span></div>
             <dl><div><dt>Valore dei servizi</dt><dd>{amount(previewTotal)}</dd></div><div><dt>Quantità complessiva</dt><dd>{items.reduce(
   (total, item) => total + decimalNumber(item.quantity),
   0
-).toLocaleString("it-IT", { maximumFractionDigits: 2 }).toLocaleString("it-IT", { maximumFractionDigits: 2 })}</dd></div><div><dt>Consegna stimata</dt><dd>{quoteForm.delivery_time || "Da definire"}</dd></div><div><dt>Stato</dt><dd className="quote-summary-state">{STATUS_LABELS[savedQuote?.status || "DRAFT"]}</dd></div></dl>
+).toLocaleString("it-IT", { maximumFractionDigits: 2 }).toLocaleString("it-IT", { maximumFractionDigits: 2 })}</dd></div><div><dt>Consegna stimata</dt><dd>{quoteForm.delivery_time || "Da definire"}</dd></div><div><dt>Stato</dt><dd className={`quote-summary-state quote-summary-state-${(savedQuote?.status || "DRAFT").toLowerCase()}`}>{STATUS_LABELS[savedQuote?.status || "DRAFT"]}</dd></div></dl>
             <div className="quote-grand-total" aria-live="polite"><span>Totale preventivo</span><div><strong>{amount(previewTotal)}</strong><Icon name="quote" size={25} /></div></div>
             <button type="button" className="sq-button sq-button-primary quote-publish-button" disabled={editorDisabled || Boolean(savedQuote && savedQuote.status !== "DRAFT")} onClick={handleSaveAndPublish}><Icon name="send" size={19} />{publishingId !== null ? "Pubblicazione…" : saving ? "Salvataggio…" : savedQuote && savedQuote.status !== "DRAFT" ? "Preventivo pubblicato" : "Genera link pubblico"}</button>
             <div className="quote-summary-actions"><button type="submit" className="sq-button sq-button-secondary" disabled={editorDisabled || isPublished}><Icon name="save" size={17} />{saving ? "Salvataggio…" : isEditing ? "Salva modifiche" : "Salva bozza"}</button><button type="button" className="sq-button sq-button-secondary" disabled={loading || Boolean(error)} onClick={() => setPreviewOpen(true)}><Icon name="eye" size={17} />Anteprima</button></div>
@@ -434,7 +434,7 @@ export default function QuotesPage() {
       </form>
 
       <section className="quote-history" aria-labelledby="quote-history-heading">
-        <div className="quote-history-heading"><div><h2 id="quote-history-heading">Elenco Preventivi Emessi</h2><p>Storico preventivi, stati e link pubblici generati</p></div><label htmlFor="quote-sort">Ordinamento: <select id="quote-sort" value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }}><option value="recent">Più recenti ↓</option><option value="total">Importo maggiore ↓</option><option value="title">Titolo A–Z</option></select></label></div>
+        <div className="quote-history-heading"><div><h2 id="quote-history-heading">Elenco preventivi emessi</h2><p>Storico preventivi, stati e link pubblici generati</p></div><label htmlFor="quote-sort">Ordinamento: <select id="quote-sort" value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }}><option value="recent">Più recenti ↓</option><option value="total">Importo maggiore ↓</option><option value="title">Titolo A–Z</option></select></label></div>
         <div className={`quote-history-card ${compactView ? "quote-history-compact" : ""}`}>
           <div className="quote-table-scroll" tabIndex={0} role="region" aria-label="Tabella preventivi"><table className="quote-table"><thead><tr><th scope="col">Titolo &amp; commessa</th><th scope="col">Dettaglio voci</th><th scope="col">Stato</th><th scope="col">Totale</th><th scope="col">Consegna</th><th scope="col">Link pubblico cliente</th><th scope="col">Azioni</th></tr></thead><tbody>
             {visibleQuotes.map((quote) => <tr key={quote.id} className={editingId === quote.id ? "quote-current-row" : ""}>

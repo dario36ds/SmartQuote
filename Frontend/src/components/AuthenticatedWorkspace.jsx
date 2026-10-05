@@ -48,9 +48,9 @@ export default function AuthenticatedWorkspace({ children, variant, search, onSe
           </label>
           <div className="sq-topbar-actions">
             {onNewQuote ? (
-              <button type="button" className="sq-button sq-button-primary sq-new-quote" onClick={onNewQuote} aria-label="Nuovo Preventivo"><Icon name="plus" /><span>Nuovo Preventivo</span></button>
+              <button type="button" className="sq-button sq-button-primary sq-new-quote" onClick={onNewQuote} aria-label="Nuovo preventivo"><Icon name="plus" /><span>Nuovo preventivo</span></button>
             ) : (
-              <Link to="/quotes" className="sq-button sq-button-primary sq-new-quote" aria-label="Nuovo Preventivo"><Icon name="plus" /><span>Nuovo Preventivo</span></Link>
+              <Link to="/quotes" className="sq-button sq-button-primary sq-new-quote" aria-label="Nuovo preventivo"><Icon name="plus" /><span>Nuovo preventivo</span></Link>
             )}
             <details className="sq-notifications">
               <summary className="sq-icon-button" aria-label="Notifiche"><Icon name="bell" size={25} /></summary>

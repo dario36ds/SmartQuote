@@ -207,12 +207,12 @@ export default function CustomersPage() {
       <div className="customer-heading">
         <div>
           <nav className="customer-breadcrumb" aria-label="Percorso"><span>SmartQuote</span><Icon name="chevron" size={14} /><span aria-current="page">Clienti</span></nav>
-          <h1>Anagrafica Clienti</h1>
+          <h1>Anagrafica clienti</h1>
           <p>Gestisci l’elenco clienti, consulta i preventivi associati e monitora il fatturato generato.</p>
         </div>
         <div className="customer-heading-actions">
           <button className={`sq-button sq-button-secondary ${filtersOpen ? "is-active" : ""}`} type="button" onClick={() => setFiltersOpen((value) => !value)} aria-expanded={filtersOpen} aria-controls="customer-advanced-filters"><Icon name="filters" />Filtri{statusFilter && <span className="customer-filter-dot" />}</button>
-          <button className="sq-button sq-button-primary" type="button" onClick={handleNewCustomer} disabled={busy || loading || Boolean(error)}><Icon name="userPlus" size={22} />Nuovo Cliente</button>
+          <button className="sq-button sq-button-primary" type="button" onClick={handleNewCustomer} disabled={busy || loading || Boolean(error)}><Icon name="userPlus" size={22} />Nuovo cliente</button>
         </div>
       </div>
 
@@ -272,7 +272,7 @@ export default function CustomersPage() {
                 </tbody>
               </table>
             </div>
-            {filteredCustomers.length === 0 && <div className="customer-empty"><span className="customer-empty-icon"><Icon name={customers.length ? "search" : "users"} size={30} /></span><strong>{customers.length ? "Nessun cliente trovato" : "La tua anagrafica parte da qui"}</strong><p>{customers.length ? "Prova a cambiare la ricerca o i filtri selezionati." : "Aggiungi il primo cliente per iniziare a creare preventivi."}</p><button className="sq-button sq-button-primary" type="button" onClick={customers.length ? () => { updateSearch(""); setFilter("all"); setStatusFilter(""); } : handleNewCustomer}>{customers.length ? "Reimposta ricerca" : "Nuovo Cliente"}</button></div>}
+            {filteredCustomers.length === 0 && <div className="customer-empty"><span className="customer-empty-icon"><Icon name={customers.length ? "search" : "users"} size={30} /></span><strong>{customers.length ? "Nessun cliente trovato" : "La tua anagrafica parte da qui"}</strong><p>{customers.length ? "Prova a cambiare la ricerca o i filtri selezionati." : "Aggiungi il primo cliente per iniziare a creare preventivi."}</p><button className="sq-button sq-button-primary" type="button" onClick={customers.length ? () => { updateSearch(""); setFilter("all"); setStatusFilter(""); } : handleNewCustomer}>{customers.length ? "Reimposta ricerca" : "Nuovo cliente"}</button></div>}
             <footer className="customer-table-footer">
               <p aria-live="polite">Mostrati <strong>{visibleCustomers.length}</strong> di <strong>{filteredCustomers.length}</strong> clienti<span className="customer-footer-source"><span>•</span> Dati aggiornati al caricamento</span></p>
               <nav className="customer-pagination" aria-label="Paginazione clienti"><button type="button" className="sq-icon-button" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)} aria-label="Pagina precedente"><Icon name="chevron" size={16} className="customer-previous" /></button><span aria-current="page" aria-label={`Pagina ${currentPage} di ${totalPages}`}>{currentPage}</span><button type="button" className="sq-icon-button" disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)} aria-label="Pagina successiva"><Icon name="chevron" size={16} /></button></nav>
