@@ -1,3 +1,202 @@
 # SmartQuote
 
-Full Stack application for creating and managing smart quotes with AI support.
+SmartQuote è un’applicazione per creare e gestire preventivi commerciali, organizzare i clienti e generare testi di presentazione con AI locale tramite Ollama.
+
+## Funzionalità
+
+- **Account:** registrazione, accesso e logout con autenticazione tramite token; pulsante per mostrare o nascondere la password.
+- **Clienti:** creazione, modifica ed eliminazione dell’anagrafica, ricerca, filtri, ordinamento e paginazione, con riepiloghi dei preventivi associati.
+- **Preventivi:** editor con cliente, titolo, descrizione, tempi di consegna e voci di costo; calcolo dei totali, salvataggio in bozza e anteprima.
+- **Testi AI:** generazione con tono professionale, cordiale, sintetico o commerciale. La bozza viene salvata prima della generazione; il testo può essere rivisto e deve essere salvato per conservarne le modifiche. In caso di errore, la descrizione precedente rimane disponibile.
+- **Condivisione:** pubblicazione di un link cliente, copia del link e preparazione di messaggi per email o WhatsApp. L’invio viene confermato nell’app scelta.
+- **Area cliente:** consultazione del preventivo senza account e accettazione o rifiuto con conferma.
+- **Dashboard:** valore accettato, preventivi attivi, tasso di accettazione, clienti totali, andamento mensile, distribuzione degli stati e clienti in evidenza.
+- **Interfaccia:** stile condiviso tra le pagine, elenchi a schede su mobile, finestre di conferma per le eliminazioni e skeleton per generazione AI, dashboard, clienti, preventivi, pagina pubblica e caricamento della sessione. Le animazioni rispettano la preferenza “riduci movimento”.
+
+Il ciclo del preventivo comprende gli stati **Bozza**, **Inviato**, **Visualizzato**, **Accettato** e **Rifiutato**. Solo le bozze possono essere modificate o rigenerate con AI. La pubblicazione rende disponibile il link pubblico e passa il preventivo a “Inviato”; la prima apertura dell’area cliente lo passa a “Visualizzato”.
+
+## Tecnologie e struttura
+
+- **Frontend:** React 19, React Router, Vite 8 ed ESLint.
+- **Backend:** Python 3.14+, Django e Django REST Framework, con dipendenze gestite da `uv`.
+- **Database:** PostgreSQL 17 nella configurazione Docker.
+- **AI:** Ollama con modello configurabile; il modello predefinito è `qwen2.5:14b-instruct`.
+
+```text
+SmartQuote/
+├── Backend/
+│   ├── accounts/      # Autenticazione
+│   ├── customers/     # Anagrafica clienti
+│   ├── quotes/        # Preventivi e area pubblica
+│   ├── ai_service/    # Integrazione con Ollama
+│   └── config/        # Configurazione Django
+├── Frontend/
+│   └── src/
+│       ├── components/ # Componenti condivisi e skeleton
+│       ├── context/    # Stato dell’autenticazione
+│       ├── pages/      # Pagine dell’applicazione
+│       └── utils/      # Dashboard e condivisione
+├── .env.example
+└── docker-compose.yml
+```
+
+## Avvio con Docker
+
+Sono necessari Docker e Docker Compose. Dalla radice del progetto:
+
+```bash
+cp .env.example .env
+```
+
+Configura `DJANGO_SECRET_KEY` nel nuovo `.env` con una chiave casuale locale e adatta le altre variabili se necessario. Poi avvia i servizi:
+
+```bash
+docker compose up --build
+```
+
+Compose avvia PostgreSQL e Ollama, scarica il modello configurato se non è già disponibile, applica le migrazioni e avvia backend e frontend. Il primo avvio può richiedere tempo per il download del modello. Database e modelli vengono conservati nei volumi Docker.
+
+| Servizio | Indirizzo locale |
+| --- | --- |
+| Applicazione | http://localhost:5173 |
+| API | http://127.0.0.1:8000/api/ |
+| Amministrazione Django | http://127.0.0.1:8000/admin/ |
+
+Per consultare i log o fermare i servizi:
+
+```bash
+docker compose logs -f backend ollama ollama-init
+docker compose down
+```
+
+La configurazione inclusa usa i server di sviluppo Django e Vite. Ollama è raggiungibile dal backend nella rete interna di Compose.
+
+## Avvio locale
+
+Sono necessari Python 3.14 o successivo, `uv`, Node.js 22 con npm, PostgreSQL e Ollama. Il container frontend usa Node.js 22.23.2.
+
+### 1. Configurazione e database
+
+Dalla radice del progetto, crea i file di configurazione:
+
+```bash
+cp .env.example .env
+cp Frontend/.env.example Frontend/.env
+```
+
+Imposta `DJANGO_SECRET_KEY` e le credenziali PostgreSQL nel `.env` della radice. Puoi usare un database locale già configurato oppure avviare solo PostgreSQL tramite Compose:
+
+```bash
+docker compose up -d db
+```
+
+### 2. Ollama
+
+Avvia Ollama tramite la sua applicazione oppure, in un terminale dedicato:
+
+```bash
+ollama serve
+```
+
+In un altro terminale, scarica il modello indicato da `OLLAMA_MODEL`:
+
+```bash
+ollama pull qwen2.5:14b-instruct
+```
+
+Se cambi modello, aggiorna `OLLAMA_MODEL` nel `.env` e scarica il modello corrispondente.
+
+### 3. Backend
+
+```bash
+cd Backend
+uv sync --frozen
+uv run manage.py migrate
+uv run manage.py runserver 127.0.0.1:8000
+```
+
+Per accedere all’amministrazione Django, crea facoltativamente un superutente dalla cartella `Backend`:
+
+```bash
+uv run manage.py createsuperuser
+```
+
+### 4. Frontend
+
+In un altro terminale, dalla radice del progetto:
+
+```bash
+cd Frontend
+npm ci
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+Apri http://127.0.0.1:5173 e registra un account. Aggiungi un cliente, crea una bozza e inserisci le voci di costo; puoi poi generare la descrizione AI, salvarla e pubblicare il link da condividere.
+
+## Variabili d’ambiente
+
+Il backend legge il `.env` nella radice del progetto; le variabili già impostate nel processo hanno precedenza. Nell’avvio locale, Vite legge `Frontend/.env`; con Docker, l’indirizzo API viene passato dal `.env` della radice.
+
+| Variabile | Utilizzo |
+| --- | --- |
+| `DJANGO_SECRET_KEY` | Chiave segreta richiesta per avviare Django. |
+| `DJANGO_DEBUG` | Modalità debug; l’esempio usa `True` per lo sviluppo locale. |
+| `DJANGO_ALLOWED_HOSTS` | Host consentiti, separati da virgole, senza schema o porta. |
+| `CORS_ALLOWED_ORIGINS` | Origini del frontend consentite, con schema e porta. |
+| `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Nome del database e credenziali PostgreSQL. |
+| `DB_HOST`, `DB_PORT` | Indirizzo PostgreSQL; Compose usa internamente `db:5432`. |
+| `OLLAMA_BASE_URL` | Indirizzo di Ollama; in locale è `http://127.0.0.1:11434`, in Compose è `http://ollama:11434`. |
+| `OLLAMA_MODEL` | Modello da usare per la generazione del testo. |
+| `VITE_API_BASE_URL` | Indirizzo API raggiungibile dal browser; predefinito `http://127.0.0.1:8000/api`. |
+
+Riavvia il servizio interessato dopo aver modificato la configurazione. Se cambi porta o host del frontend, aggiorna anche `CORS_ALLOWED_ORIGINS`. I file `.env` locali sono esclusi da Git; i valori di esempio sono in [.env.example](.env.example) e [Frontend/.env.example](Frontend/.env.example).
+
+## Pagine e API
+
+| Pagina | Percorso |
+| --- | --- |
+| Dashboard | `/` |
+| Clienti | `/customers` |
+| Preventivi | `/quotes` |
+| Accesso e registrazione | `/login`, `/register` |
+| Preventivo pubblico | `/q/:token` |
+
+Le API private richiedono l’header `Authorization: Token <token>`. Clienti e preventivi vengono filtrati in base all’utente autenticato.
+
+| API | Operazioni |
+| --- | --- |
+| `/api/auth/register/`, `/api/auth/login/`, `/api/auth/logout/` | `POST`: registrazione, accesso e logout. |
+| `/api/auth/me/` | `GET`: utente corrente. |
+| `/api/customers/` | `GET`, `POST`: elenco e creazione clienti. |
+| `/api/customers/:id/` | `GET`, `PUT`, `PATCH`, `DELETE`: gestione del singolo cliente. |
+| `/api/quotes/` | `GET`, `POST`: elenco e creazione preventivi. |
+| `/api/quotes/:id/` | `GET`, `PUT`, `PATCH`, `DELETE`: gestione del singolo preventivo. |
+| `/api/quotes/:id/generate-text/` | `POST`: generazione AI con `tone` pari a `professional`, `friendly`, `concise` o `commercial`. |
+| `/api/quotes/:id/publish/` | `POST`: pubblicazione della bozza. |
+| `/api/quotes/public/:token/` | `GET`: consultazione pubblica tramite token UUID. |
+| `/api/quotes/public/:token/accept/`, `/api/quotes/public/:token/reject/` | `POST`: risposta del cliente. |
+
+Le API pubbliche del preventivo non richiedono autenticazione. La generazione AI restituisce `generated_text` senza salvarlo automaticamente nella descrizione.
+
+## Verifiche
+
+Controlli frontend, dalla cartella `Frontend`:
+
+```bash
+npm run lint
+npm run build
+```
+
+Controlli e test backend, dalla cartella `Backend`, con PostgreSQL configurato e disponibile:
+
+```bash
+uv run manage.py check
+uv run manage.py test
+```
+
+## Problemi comuni
+
+- **Frontend non collegato all’API:** verifica `VITE_API_BASE_URL`, che il backend sia avviato e che l’origine del frontend sia presente in `CORS_ALLOWED_ORIGINS`.
+- **Connessione al database fallita:** controlla le variabili `DB_*` e la disponibilità di PostgreSQL. Le migrazioni devono essere applicate prima dell’uso.
+- **Generazione AI non disponibile:** controlla che Ollama sia avviato, raggiungibile dal backend e che il modello configurato sia stato scaricato. Il backend attende al massimo 120 secondi; in caso di timeout o memoria insufficiente, puoi configurare un modello più leggero.
+- **Link pubblico non disponibile:** il preventivo deve essere pubblicato. Le bozze non sono consultabili nell’area cliente e l’eliminazione del preventivo rende il relativo link inutilizzabile.
