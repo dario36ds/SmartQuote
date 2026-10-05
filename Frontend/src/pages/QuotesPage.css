@@ -48,7 +48,9 @@
 .quote-form-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px 20px; }
 .quote-form-grid label { display: flex; flex-direction: column; gap: 7px; min-width: 0; font-size: 14px; }
 .quote-label-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
-.quote-label-row a { display: flex; align-items: center; gap: 3px; font-size: 12px; color: var(--sq-primary-dark); white-space: nowrap; }
+.quote-customer-field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.quote-new-customer { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 28px; padding: 0; font-size: 12px; color: var(--sq-primary-dark); background: transparent; white-space: nowrap; }
+.quote-message .quote-new-customer { min-height: 44px; padding: 8px 12px; border-radius: 8px; background: var(--sq-soft); }
 .quote-form-grid input, .quote-form-grid select, .quote-form-grid textarea { display: block; width: 100%; min-width: 0; margin-top: auto; min-height: 50px; padding: 12px 14px; border: 0; border-radius: 9px; background: var(--sq-soft); color: var(--sq-text-secondary); font-size: 14px; line-height: 1.5; }
 .quote-form-grid input::placeholder, .quote-form-grid textarea::placeholder { color: var(--sq-muted); }
 .quote-form-grid select { min-height: 50px; padding-right: 8px; text-overflow: ellipsis; }
@@ -138,6 +140,8 @@
 .quote-success { color: #006a61; background: #d9fbf7; }
 .quote-success .sq-icon-button { background: transparent; }
 .quote-economic-summary .quote-alert, .quote-ai-panel .quote-alert { margin: 20px 0 0 !important; }
+.quote-form-grid .quote-label-row { min-height: 28px; }
+.quote-form-grid > label[for="new-quote-title"] { padding-top: 4px; }
 .quote-history { margin-top: 90px; }
 .quote-history-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 22px; }
 .quote-history-heading h2 { font-size: 24px; font-weight: 500; letter-spacing: -.5px; }
@@ -224,7 +228,7 @@ body:has(.quote-preview-dialog[open]) { overflow: hidden; }
   .quote-form-grid { gap: 18px 14px; }
   .quote-form-grid label, .quote-readonly-field { font-size: 12px; }
   .quote-label-row { gap: 4px 8px; }
-  .quote-label-row a { font-size: 11px; }
+  .quote-label-row .quote-new-customer { font-size: 11px; }
   .quote-form-grid input, .quote-form-grid select, .quote-form-grid textarea { font-size: 13px; padding-inline: 12px; }
   .quote-input-icon input { padding-left: 0; }
   .quote-items-head, .quote-item { grid-template-columns: minmax(0, 1.6fr) 55px 85px 75px 20px; gap: 8px; }
@@ -259,6 +263,8 @@ body:has(.quote-preview-dialog[open]) { overflow: hidden; }
   .quote-page-heading h1 { font-size: 32px; }
 }
 @media (max-width: 767px) {
+  .quote-new-customer { min-height: 44px; }
+  .quote-form-grid > label[for="new-quote-title"] { padding-top: 0; }
   .quote-workspace { font-size: 14px; }
   .quote-page-heading { padding-top: 0; margin-bottom: 24px; }
   .quote-page-heading h1 { font-size: 28px; letter-spacing: -1px; }

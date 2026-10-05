@@ -6,7 +6,7 @@ SmartQuote è un’applicazione per creare e gestire preventivi commerciali, org
 
 - **Account:** registrazione, accesso e logout con autenticazione tramite token; pulsante per mostrare o nascondere la password.
 - **Clienti:** creazione, modifica ed eliminazione dell’anagrafica, ricerca, filtri, ordinamento e paginazione, con riepiloghi dei preventivi associati.
-- **Preventivi:** editor con cliente, titolo, descrizione, tempi di consegna e voci di costo; calcolo dei totali, salvataggio in bozza e anteprima.
+- **Preventivi:** editor con cliente, titolo, descrizione, tempi di consegna e voci di costo; creazione di un nuovo cliente direttamente nell’editor, con selezione automatica e mantenimento dei dati già inseriti; calcolo dei totali, salvataggio in bozza e anteprima.
 - **Testi AI:** generazione con tono professionale, cordiale, sintetico o commerciale. La bozza viene salvata prima della generazione; il testo può essere rivisto e deve essere salvato per conservarne le modifiche. In caso di errore, la descrizione precedente rimane disponibile.
 - **Condivisione:** pubblicazione di un link cliente, copia del link e preparazione di messaggi per email o WhatsApp. L’invio viene confermato nell’app scelta.
 - **Area cliente:** consultazione del preventivo senza account e accettazione o rifiuto con conferma.
@@ -131,7 +131,7 @@ npm ci
 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-Apri http://127.0.0.1:5173 e registra un account. Aggiungi un cliente, crea una bozza e inserisci le voci di costo; puoi poi generare la descrizione AI, salvarla e pubblicare il link da condividere.
+Apri http://127.0.0.1:5173 e registra un account. Dalla pagina Preventivi puoi scegliere un cliente esistente oppure premere “Nuovo cliente” per crearlo e selezionarlo senza cambiare pagina. Completa la proposta e inserisci le voci di costo; puoi poi salvare la bozza, generare la descrizione AI, salvarla e pubblicare il link da condividere.
 
 ## Variabili d’ambiente
 

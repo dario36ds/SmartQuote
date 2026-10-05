@@ -92,22 +92,6 @@
 .customer-alert { padding: 14px 18px; margin-bottom: 16px !important; border-radius: 10px; color: #922624; background: #fff0ee; font-size: 14px; }
 .customer-notice { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; margin-bottom: 16px; background: var(--sq-status-accepted-bg); color: #006a61; border-radius: 10px; font-size: 14px; }
 .customer-notice .sq-icon-button { background: transparent; }
-.customer-dialog { width: min(580px, calc(100% - 32px)); max-height: calc(100svh - 40px); border: 0; padding: 28px; border-radius: 20px; color: var(--sq-ink); background: white; box-shadow: 0 24px 80px #17233b26; }
-.customer-dialog::backdrop { background: #14132e55; backdrop-filter: blur(4px); }
-body:has(.customer-dialog[open]) { overflow: hidden; }
-.customer-dialog-heading { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
-.customer-dialog-eyebrow { color: var(--sq-primary); font-size: 11px; letter-spacing: 1px; font-weight: 600; }
-.customer-dialog-heading h2 { font-size: 26px; margin: 4px 0 6px; letter-spacing: -.6px; }
-.customer-dialog-heading p { font-size: 13px; color: var(--sq-muted); }
-.customer-form-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; margin: 0; padding: 0; border: 0; }
-.customer-form-fields label { display: block; min-width: 0; font-size: 13px; font-weight: 500; }
-.customer-form-fields label > span { color: var(--sq-primary); }
-.customer-form-fields input, .customer-form-fields textarea { display: block; width: 100%; min-width: 0; min-height: 50px; margin-top: 7px; padding: 12px 14px; border: 1px solid var(--sq-border); border-radius: 9px; background: var(--sq-soft); color: var(--sq-ink); font-size: 14px; font-weight: 400; }
-.customer-form-fields input::placeholder, .customer-form-fields textarea::placeholder { color: var(--sq-muted); opacity: 1; }
-.customer-form-fields textarea { resize: vertical; }
-.customer-field-full { grid-column: 1 / -1; }
-.customer-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #eef0f8; font-size: 14px; }
-.customer-dialog .customer-alert { margin-top: 16px; }
 
 @media (min-width: 1440px) {
   .customer-heading p { font-size: 17px; }
@@ -191,7 +175,4 @@ body:has(.customer-dialog[open]) { overflow: hidden; }
   .customer-advanced-filters { padding-inline: 14px; gap: 12px; }
   .customer-advanced-filters label { width: 100%; }
   .customer-advanced-filters select { width: 100%; }
-  .customer-dialog { padding: 22px; }
-  .customer-form-fields { grid-template-columns: 1fr; gap: 14px; }
-  .customer-dialog-heading h2 { font-size: 24px; }
 }

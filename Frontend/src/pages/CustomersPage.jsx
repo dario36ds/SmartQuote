@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { apiRequest } from "../api";
 import AuthenticatedLayout from "../components/AuthenticatedLayout";
+import CustomerFormDialog from "../components/CustomerFormDialog";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import Skeleton from "../components/Skeleton";
 import { ListSkeleton, SkeletonLines } from "../components/LoadingSkeletons";
@@ -54,7 +55,6 @@ export default function CustomersPage() {
   const [sort, setSort] = useState("recent");
   const [page, setPage] = useState(1);
   const [notice, setNotice] = useState("");
-  const dialogRef = useRef(null);
   const isEditing = editingId !== null;
   const busy = saving || deletingId !== null;
   const quotesAvailable = !quotesLoading && !quotesError;
@@ -85,12 +85,6 @@ export default function CustomersPage() {
     loadQuotes();
     return () => { active = false; };
   }, [token]);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (formOpen && !dialog.open) dialog.showModal();
-    if (!formOpen && dialog.open) dialog.close();
-  }, [formOpen]);
 
   const customerQuotes = new Map();
   for (const quote of quotes) {
@@ -296,20 +290,18 @@ export default function CustomersPage() {
         )}
       </section>
 
-      <dialog ref={dialogRef} className="customer-dialog" aria-labelledby="customer-form-heading" onCancel={(event) => { event.preventDefault(); if (!busy) handleCancelEdit(); }}>
-        <div className="customer-dialog-heading"><div><span className="customer-dialog-eyebrow">ANAGRAFICA CLIENTI</span><h2 id="customer-form-heading">{isEditing ? "Modifica cliente" : "Nuovo cliente"}</h2><p>Inserisci i dati di contatto del cliente.</p></div><button type="button" className="sq-icon-button" onClick={handleCancelEdit} disabled={busy} aria-label="Chiudi modulo cliente"><Icon name="close" /></button></div>
-        <form onSubmit={handleSubmit}>
-          <fieldset disabled={busy} className="customer-form-fields"><legend className="sq-visually-hidden">Dati del cliente</legend>
-            <label className="customer-field-full" htmlFor="customer-name">Nome e cognome <span>*</span><input id="customer-name" name="name" value={form.name} onChange={handleChange} maxLength={150} autoComplete="name" placeholder="Es. Mario Rossi" required /></label>
-            <label className="customer-field-full" htmlFor="customer-company">Azienda<input id="customer-company" name="company" value={form.company} onChange={handleChange} maxLength={150} autoComplete="organization" placeholder="Ragione sociale (facoltativa)" /></label>
-            <label htmlFor="customer-email">Email<input id="customer-email" name="email" type="email" value={form.email} onChange={handleChange} maxLength={254} autoComplete="email" placeholder="nome@azienda.it" /></label>
-            <label htmlFor="customer-phone">Telefono<input id="customer-phone" name="phone" type="tel" value={form.phone} onChange={handleChange} maxLength={50} autoComplete="tel" placeholder="+39 000 000 0000" /></label>
-            <label className="customer-field-full" htmlFor="customer-address">Indirizzo<textarea id="customer-address" name="address" value={form.address} onChange={handleChange} autoComplete="street-address" rows={2} placeholder="Via, numero civico, città" /></label>
-          </fieldset>
-          {formError && <p className="customer-alert" role="alert">{formError}</p>}
-          <div className="customer-dialog-actions"><button className="sq-button sq-button-secondary" type="button" onClick={handleCancelEdit} disabled={busy}>Annulla</button><button className="sq-button sq-button-primary" type="submit" disabled={busy}><Icon name="check" size={18} />{saving ? "Salvataggio…" : isEditing ? "Salva modifiche" : "Crea cliente"}</button></div>
-        </form>
-      </dialog>
+      <CustomerFormDialog
+        open={formOpen}
+        title={isEditing ? "Modifica cliente" : "Nuovo cliente"}
+        submitLabel={isEditing ? "Salva modifiche" : "Crea cliente"}
+        form={form}
+        error={formError}
+        busy={busy}
+        saving={saving}
+        onChange={handleChange}
+        onSubmit={handleSubmit}
+        onCancel={handleCancelEdit}
+      />
 
       <DeleteConfirmationDialog
         open={Boolean(deleteTarget)}

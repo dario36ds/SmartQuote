@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 
 import { apiRequest } from "../api";
 import AuthenticatedLayout from "../components/AuthenticatedLayout";
+import CustomerFormDialog from "../components/CustomerFormDialog";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import Skeleton from "../components/Skeleton";
 import { FormSkeleton, ListSkeleton, QuoteItemsSkeleton, QuoteSummarySkeleton, SkeletonLines } from "../components/LoadingSkeletons";
@@ -21,6 +22,7 @@ const STATUS_LABELS = {
 const TONES = { professional: "Professionale", friendly: "Cordiale", concise: "Sintetico", commercial: "Commerciale" };
 const PAGE_SIZE = 8;
 const EMPTY_QUOTE = { customer: "", title: "", description: "", delivery_time: "" };
+const EMPTY_CUSTOMER = { name: "", company: "", email: "", phone: "", address: "" };
 const amount = (value) => Number(value).toLocaleString("it-IT", {
   style: "currency", currency: "EUR", useGrouping: "always", minimumFractionDigits: 2, maximumFractionDigits: 2,
 });
@@ -62,6 +64,10 @@ export default function QuotesPage() {
   const [customers, setCustomers] = useState([]);
   const [customersLoading, setCustomersLoading] = useState(true);
   const [customersError, setCustomersError] = useState("");
+  const [customerFormOpen, setCustomerFormOpen] = useState(false);
+  const [customerForm, setCustomerForm] = useState({ ...EMPTY_CUSTOMER });
+  const [customerFormError, setCustomerFormError] = useState("");
+  const [customerSaving, setCustomerSaving] = useState(false);
   const [customerId, setCustomerId] = useState(() => searchParams.get("customer") || "");
   const [quoteForm, setQuoteForm] = useState({ ...EMPTY_QUOTE });
   const [items, setItems] = useState(() => [createEmptyItem()]);
@@ -87,12 +93,13 @@ export default function QuotesPage() {
   const [copyNotice, setCopyNotice] = useState("");
   const formRef = useRef(null);
   const previewRef = useRef(null);
-  const busy = saving || deletingId !== null || generating || publishingId !== null;
+  const customerCreatedRef = useRef(false);
+  const busy = saving || customerSaving || deletingId !== null || generating || publishingId !== null;
   const isEditing = editingId !== null;
   const savedQuote = quotes.find((quote) => quote.id === editingId);
   const isPublished = Boolean(savedQuote && savedQuote.status !== "DRAFT");
   const dataLoading = loading || customersLoading;
-  const editorDisabled = busy || loading || Boolean(error) || customersLoading || Boolean(customersError) || customers.length === 0;
+  const editorDisabled = busy || loading || Boolean(error) || customersLoading || Boolean(customersError);
   const hasUnsavedData = isEditing && (
     !savedQuote ||
     String(savedQuote.customer) !== quoteForm.customer ||
@@ -179,6 +186,54 @@ export default function QuotesPage() {
     const { name, value } = event.target;
     setQuoteForm((current) => ({ ...current, [name]: value }));
     setFormSuccess("");
+  }
+
+  function handleNewCustomer() {
+    if (editorDisabled || isPublished) return;
+    customerCreatedRef.current = false;
+    setCustomerForm({ ...EMPTY_CUSTOMER });
+    setCustomerFormError("");
+    setEditorOpen(true);
+    setCustomerFormOpen(true);
+  }
+
+  function handleCustomerChange(event) {
+    const { name, value } = event.target;
+    setCustomerForm((current) => ({ ...current, [name]: value }));
+  }
+
+  function cancelNewCustomer() {
+    if (customerSaving) return;
+    setCustomerFormOpen(false);
+    setCustomerFormError("");
+  }
+
+  function handleCustomerDialogClose() {
+    if (customerCreatedRef.current) {
+      customerCreatedRef.current = false;
+      document.getElementById("new-quote-customer")?.focus();
+    }
+  }
+
+  async function handleCreateCustomer(event) {
+    event.preventDefault();
+    if (editorDisabled || isPublished) return;
+    setCustomerFormError("");
+    setCustomerSaving(true);
+    try {
+      const customer = await apiRequest("/customers/", { method: "POST", token, body: customerForm });
+      setCustomers((current) => [customer, ...current]);
+      setQuoteForm((current) => ({ ...current, customer: String(customer.id) }));
+      setFormError("");
+      setFormSuccess(`Cliente «${customer.name}» creato e selezionato. Puoi completare il preventivo.`);
+      customerCreatedRef.current = true;
+      setCustomerFormOpen(false);
+    } catch (err) {
+      setCustomerFormError(err.data?.name?.[0] || err.data?.company?.[0] || err.data?.email?.[0] ||
+        err.data?.phone?.[0] || err.data?.address?.[0] || err.data?.non_field_errors?.[0] || err.message);
+    } finally {
+      setCustomerSaving(false);
+    }
   }
 
   function handleItemChange(itemKey, event) {
@@ -372,7 +427,7 @@ export default function QuotesPage() {
       {customersLoading && <p className="sq-loading-label" role="status">Caricamento clienti…</p>}
       {error && <p className="quote-alert" role="alert">{error}</p>}
       {customersError && <p className="quote-alert" role="alert">Impossibile caricare i clienti: {customersError}</p>}
-      {!customersLoading && !customersError && customers.length === 0 && <div className="quote-message">Aggiungi un cliente per creare il tuo primo preventivo. <Link to="/customers">Vai ai clienti <Icon name="chevron" size={16} /></Link></div>}
+      {!customersLoading && !customersError && customers.length === 0 && <div className="quote-message"><span>Aggiungi il primo cliente direttamente qui per creare il preventivo.</span><button type="button" className="quote-new-customer" disabled={editorDisabled || isPublished} onClick={handleNewCustomer}><Icon name="plus" size={16} />Nuovo cliente</button></div>}
       {publishError && <p className="quote-alert" role="alert">{publishError}</p>}
       {formSuccess && <p className="quote-success" role="status">{formSuccess}</p>}
       {isPublished && <p className="quote-message" role="status">Questo preventivo è pubblicato e non può essere modificato. Puoi consultarlo oppure eliminarlo dall’elenco dopo conferma.</p>}
@@ -384,7 +439,7 @@ export default function QuotesPage() {
           <section className="quote-panel quote-general-panel">
             <PanelHeading step="1" title="Dati generali del preventivo" subtitle="Intestazione, cliente e tempistiche">{dataLoading ? <Skeleton width={70} height={24} /> : <StatusBadge status={savedQuote?.status || "DRAFT"} />}</PanelHeading>
             {dataLoading ? <FormSkeleton /> : <div className="quote-form-grid">
-              <label htmlFor="new-quote-customer"><span className="quote-label-row">Cliente del preventivo *<Link to="/customers"><Icon name="plus" size={13} />Nuovo cliente</Link></span><select id="new-quote-customer" name="customer" value={quoteForm.customer} onChange={handleQuoteChange} required><option value="">Seleziona un cliente</option>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}{customer.company ? ` (${customer.company})` : ""}</option>)}</select></label>
+              <div className="quote-customer-field"><div className="quote-label-row"><label htmlFor="new-quote-customer">Cliente del preventivo *</label><button type="button" className="quote-new-customer" disabled={editorDisabled || isPublished} onClick={handleNewCustomer}><Icon name="plus" size={13} />Nuovo cliente</button></div><select id="new-quote-customer" name="customer" value={quoteForm.customer} onChange={handleQuoteChange} required><option value="">Seleziona un cliente</option>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}{customer.company ? ` (${customer.company})` : ""}</option>)}</select></div>
               <label htmlFor="new-quote-title">Titolo del preventivo *<input id="new-quote-title" name="title" value={quoteForm.title} onChange={handleQuoteChange} maxLength={200} placeholder="Es. Manutenzione e riparazione" required /></label>
               <label htmlFor="new-quote-delivery">Tempo di consegna stimato<span className="quote-input-icon"><Icon name="calendar" size={18} /><input id="new-quote-delivery" name="delivery_time" value={quoteForm.delivery_time} onChange={handleQuoteChange} maxLength={150} placeholder="Es. 5 giorni lavorativi" /></span></label>
               <div className="quote-readonly-field"><span>Stato del preventivo</span><div><Icon name="check" size={18} />{STATUS_LABELS[savedQuote?.status || "DRAFT"]}{isEditing && <small>#{editingId}</small>}</div></div>
@@ -475,6 +530,20 @@ export default function QuotesPage() {
         <p className="quote-preview-customer">{selectedCustomer?.name || "Cliente da selezionare"}{selectedCustomer?.company && ` · ${selectedCustomer.company}`}</p><p className="quote-preview-description">{quoteForm.description || "Nessuna descrizione."}</p>
         <div className="quote-preview-table-scroll"><table><caption className="sq-visually-hidden">Servizi del preventivo</caption><thead><tr><th scope="col">Servizio</th><th scope="col">Quantità</th><th scope="col">Prezzo</th><th scope="col">Totale</th></tr></thead><tbody>{items.map((item) => <tr key={item.key}><td>{item.description || "Servizio da definire"}</td><td>{item.quantity || "—"}</td><td>{amount(item.unit_price || 0)}</td><td>{amount(lineTotal(item))}</td></tr>)}</tbody></table></div><p className="quote-preview-total">Totale preventivo <strong>{amount(previewTotal)}</strong></p><p className="quote-preview-delivery">Consegna: {quoteForm.delivery_time || "Da definire"}</p>
       </dialog>
+
+      <CustomerFormDialog
+        open={customerFormOpen}
+        idPrefix="quote-customer"
+        description="Crea il cliente: sarà subito selezionato nel preventivo."
+        form={customerForm}
+        error={customerFormError}
+        busy={customerSaving}
+        saving={customerSaving}
+        onChange={handleCustomerChange}
+        onSubmit={handleCreateCustomer}
+        onCancel={cancelNewCustomer}
+        onClose={handleCustomerDialogClose}
+      />
 
       <DeleteConfirmationDialog
         open={Boolean(deleteTarget)}
