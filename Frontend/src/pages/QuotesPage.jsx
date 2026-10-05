@@ -21,9 +21,14 @@ const EMPTY_QUOTE = { customer: "", title: "", description: "", delivery_time: "
 const amount = (value) => Number(value).toLocaleString("it-IT", {
   style: "currency", currency: "EUR", useGrouping: "always", minimumFractionDigits: 2, maximumFractionDigits: 2,
 });
+const decimalNumber = (value) => {
+  const normalized = String(value ?? "").trim().replace(",", ".");
+  const number = Number(normalized);
+
+  return Number.isFinite(number) ? number : 0;
+};
 const lineTotal = (item) => {
-  const total = Number(item.quantity) * Number(item.unit_price);
-  return Number.isFinite(total) ? total : 0;
+  return decimalNumber(item.quantity) * decimalNumber(item.unit_price);
 };
 const publicUrl = (quote) => `${window.location.origin}/q/${quote.public_token}`;
 
@@ -91,7 +96,7 @@ export default function QuotesPage() {
     savedQuote.items.length !== items.length ||
     items.some((item, index) =>
       item.description !== savedQuote.items[index].description ||
-      Number(item.quantity) !== Number(savedQuote.items[index].quantity) ||
+      decimalNumber(item.quantity) !== decimalNumber(savedQuote.items[index].quantity) ||
       Number(item.unit_price) !== Number(savedQuote.items[index].unit_price)
     )
   );
@@ -253,7 +258,7 @@ export default function QuotesPage() {
     try {
       const quote = await apiRequest(isEditing ? `/quotes/${editingId}/` : "/quotes/", {
         method: isEditing ? "PATCH" : "POST", token,
-        body: { ...quoteForm, customer: Number(quoteForm.customer), items: items.map(({ description, quantity, unit_price }) => ({ description, quantity, unit_price })) },
+        body: { ...quoteForm, customer: Number(quoteForm.customer), items: items.map(({ description, quantity, unit_price }) => ({ description, quantity: String(quantity).replace(",", "."), unit_price })) },
       });
       setQuotes((current) => isEditing ? current.map((item) => item.id === quote.id ? quote : item) : [quote, ...current]);
       fillEditor(quote);
@@ -379,7 +384,18 @@ export default function QuotesPage() {
             <div className="quote-items">
               {items.map((item, index) => <div className="quote-item" key={item.key}>
                 <label className="quote-item-description" htmlFor={`item-description-${item.key}`}><span className="sq-visually-hidden">Servizio {index + 1}</span><input id={`item-description-${item.key}`} name="description" value={item.description} onChange={(event) => handleItemChange(item.key, event)} maxLength={255} placeholder="Descrizione servizio o articolo" required /><small>Voce {index + 1}</small></label>
-                <label htmlFor={`item-quantity-${item.key}`}><span className="sq-visually-hidden">Quantità voce {index + 1}</span><input id={`item-quantity-${item.key}`} name="quantity" type="number" min="0.01" step="0.01" value={item.quantity} onChange={(event) => handleItemChange(item.key, event)} required /></label>
+                <label htmlFor={`item-quantity-${item.key}`}><span className="sq-visually-hidden">Quantità voce {index + 1}</span><input
+  id={`item-quantity-${item.key}`}
+  name="quantity"
+  type="number"
+  inputMode="decimal"
+  min="1"
+  step="1"
+  value={item.quantity}
+  onChange={(event) => handleItemChange(item.key, event)}
+  placeholder="1"
+  required
+/></label>
                 <label className="quote-unit-price" htmlFor={`item-price-${item.key}`}><span className="sq-visually-hidden">Prezzo unitario voce {index + 1}</span><span aria-hidden="true">€</span><input id={`item-price-${item.key}`} name="unit_price" type="number" min="0" step="0.01" value={item.unit_price} onChange={(event) => handleItemChange(item.key, event)} placeholder="0,00" required /></label>
                 <output className="quote-item-total" aria-label={`Totale voce ${index + 1}`}>{amount(lineTotal(item))}</output>
                 <button type="button" className="quote-remove-item" disabled={items.length === 1} onClick={() => handleRemoveItem(item.key)} aria-label={`Rimuovi voce ${index + 1}`} title="Rimuovi voce"><Icon name="trash" size={18} /></button>
@@ -400,7 +416,10 @@ export default function QuotesPage() {
         <aside className="quote-summary-column" aria-label="Riepilogo economico">
           <section className="quote-panel quote-economic-summary">
             <div className="quote-summary-heading"><h2>Riepilogo<br />Economico</h2><span>{items.length} {items.length === 1 ? "voce" : "voci"}</span></div>
-            <dl><div><dt>Valore dei servizi</dt><dd>{amount(previewTotal)}</dd></div><div><dt>Quantità complessiva</dt><dd>{items.reduce((total, item) => total + (Number(item.quantity) || 0), 0).toLocaleString("it-IT", { maximumFractionDigits: 2 })}</dd></div><div><dt>Consegna stimata</dt><dd>{quoteForm.delivery_time || "Da definire"}</dd></div><div><dt>Stato</dt><dd className="quote-summary-state">{STATUS_LABELS[savedQuote?.status || "DRAFT"]}</dd></div></dl>
+            <dl><div><dt>Valore dei servizi</dt><dd>{amount(previewTotal)}</dd></div><div><dt>Quantità complessiva</dt><dd>{items.reduce(
+  (total, item) => total + decimalNumber(item.quantity),
+  0
+).toLocaleString("it-IT", { maximumFractionDigits: 2 }).toLocaleString("it-IT", { maximumFractionDigits: 2 })}</dd></div><div><dt>Consegna stimata</dt><dd>{quoteForm.delivery_time || "Da definire"}</dd></div><div><dt>Stato</dt><dd className="quote-summary-state">{STATUS_LABELS[savedQuote?.status || "DRAFT"]}</dd></div></dl>
             <div className="quote-grand-total" aria-live="polite"><span>Totale preventivo</span><div><strong>{amount(previewTotal)}</strong><Icon name="quote" size={25} /></div></div>
             <button type="button" className="sq-button sq-button-primary quote-publish-button" disabled={editorDisabled || Boolean(savedQuote && savedQuote.status !== "DRAFT")} onClick={handleSaveAndPublish}><Icon name="send" size={19} />{publishingId !== null ? "Pubblicazione…" : saving ? "Salvataggio…" : savedQuote && savedQuote.status !== "DRAFT" ? "Preventivo pubblicato" : "Genera link pubblico"}</button>
             <div className="quote-summary-actions"><button type="submit" className="sq-button sq-button-secondary" disabled={editorDisabled || isPublished}><Icon name="save" size={17} />{saving ? "Salvataggio…" : isEditing ? "Salva modifiche" : "Salva bozza"}</button><button type="button" className="sq-button sq-button-secondary" disabled={loading || Boolean(error)} onClick={() => setPreviewOpen(true)}><Icon name="eye" size={17} />Anteprima</button></div>
