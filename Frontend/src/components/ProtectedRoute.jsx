@@ -1,5 +1,6 @@
 import { Navigate } from "react-router";
 
+import { SessionSkeleton } from "./LoadingSkeletons";
 import { useAuth } from "../context/AuthContext";
 
 export default function ProtectedRoute({ children }) {
@@ -9,7 +10,7 @@ export default function ProtectedRoute({ children }) {
   } = useAuth();
 
   if (loading) {
-    return <p>Caricamento...</p>;
+    return <SessionSkeleton />;
   }
 
   if (!isAuthenticated) {

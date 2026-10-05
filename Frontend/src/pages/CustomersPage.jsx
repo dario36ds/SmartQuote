@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { apiRequest } from "../api";
 import AuthenticatedLayout from "../components/AuthenticatedLayout";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
+import Skeleton from "../components/Skeleton";
+import { ListSkeleton, SkeletonLines } from "../components/LoadingSkeletons";
 import Icon from "../components/Icon";
 import { useAuth } from "../context/AuthContext";
 import "./CustomersPage.css";
@@ -16,13 +18,13 @@ const currency = (amount, decimals = 2) => Number(amount).toLocaleString("it-IT"
 });
 const initials = (name) => name.trim().split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
 
-function MetricCard({ label, value, detail, icon, tone = "primary", positive = false }) {
+function MetricCard({ label, value, detail, icon, tone = "primary", positive = false, loading = false }) {
   return (
     <article className={`customer-metric customer-metric-${tone}`}>
       <div>
         <h2>{label}</h2>
-        <strong className="customer-metric-value">{value}</strong>
-        <p className={positive ? "customer-positive" : ""}>{detail}</p>
+        <strong className="customer-metric-value">{loading ? <Skeleton width={150} height={36} /> : value}</strong>
+        <p className={positive ? "customer-positive" : ""}>{loading ? <Skeleton width={180} height={14} /> : detail}</p>
       </div>
       <span className="customer-metric-icon"><Icon name={icon} size={28} /></span>
     </article>
@@ -230,11 +232,11 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      <section className="customer-metrics" aria-label="Riepilogo clienti e preventivi">
-        <MetricCard label="Clienti totali" value={loading ? "…" : error ? "—" : customers.length} icon="users" positive detail={loading || error ? "Anagrafica clienti" : <><Icon name="trend" size={14} />{newCustomers} nuovi questo mese</>} />
-        <MetricCard label="Preventivi attivi" value={quotesAvailable ? activeQuotes.length : metricPlaceholder} icon="quote" detail={quotesAvailable ? `Valore stimato: ${currency(activeQuotes.reduce((sum, quote) => sum + Number(quote.total), 0))}` : "Dati preventivi non disponibili"} />
-        <MetricCard label="Tasso accettazione" value={quotesAvailable ? `${(concludedQuotes.length ? acceptedQuotes.length / concludedQuotes.length * 100 : 0).toLocaleString("it-IT", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%` : metricPlaceholder} icon="check" tone="teal" detail={quotesAvailable ? `${acceptedQuotes.length} su ${concludedQuotes.length} conclusi` : "Dati preventivi non disponibili"} />
-        <MetricCard label="Volume transato" value={quotesAvailable ? currency(acceptedTotal, Number.isInteger(acceptedTotal) ? 0 : 2) : metricPlaceholder} icon="money" tone="violet" detail={quotesAvailable ? "Preventivi accettati" : "Dati preventivi non disponibili"} />
+      <section className="customer-metrics" aria-label="Riepilogo clienti e preventivi" aria-busy={loading || quotesLoading}>
+        <MetricCard loading={loading} label="Clienti totali" value={loading ? "…" : error ? "—" : customers.length} icon="users" positive detail={loading || error ? "Anagrafica clienti" : <><Icon name="trend" size={14} />{newCustomers} nuovi questo mese</>} />
+        <MetricCard loading={quotesLoading} label="Preventivi attivi" value={quotesAvailable ? activeQuotes.length : metricPlaceholder} icon="quote" detail={quotesAvailable ? `Valore stimato: ${currency(activeQuotes.reduce((sum, quote) => sum + Number(quote.total), 0))}` : "Dati preventivi non disponibili"} />
+        <MetricCard loading={quotesLoading} label="Tasso accettazione" value={quotesAvailable ? `${(concludedQuotes.length ? acceptedQuotes.length / concludedQuotes.length * 100 : 0).toLocaleString("it-IT", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%` : metricPlaceholder} icon="check" tone="teal" detail={quotesAvailable ? `${acceptedQuotes.length} su ${concludedQuotes.length} conclusi` : "Dati preventivi non disponibili"} />
+        <MetricCard loading={quotesLoading} label="Volume transato" value={quotesAvailable ? currency(acceptedTotal, Number.isInteger(acceptedTotal) ? 0 : 2) : metricPlaceholder} icon="money" tone="violet" detail={quotesAvailable ? "Preventivi accettati" : "Dati preventivi non disponibili"} />
       </section>
 
       {quotesError && <p className="customer-alert" role="alert">Impossibile caricare i riepiloghi dei preventivi: {quotesError}</p>}
@@ -255,7 +257,7 @@ export default function CustomersPage() {
           <button type="button" className="customer-reset" onClick={() => { updateSearch(""); setFilter("all"); setStatusFilter(""); setSort("recent"); }}>Reimposta filtri</button>
         </div>
 
-        {loading ? <div className="customer-empty" role="status"><span className="customer-spinner" />Caricamento clienti…</div> : error ? <div className="customer-empty customer-alert" role="alert">{error}</div> : (
+        {loading ? <ListSkeleton variant="customers" label="Caricamento clienti…" /> : error ? <div className="customer-empty customer-alert" role="alert">{error}</div> : (
           <>
             <div className="customer-table-scroll" tabIndex={0} role="region" aria-label="Tabella clienti">
               <table className="customer-table" role="table">
@@ -274,10 +276,10 @@ export default function CustomersPage() {
                         <td role="cell"><span className={`customer-type ${company ? "customer-type-company" : ""}`}><Icon name={company ? "store" : "user"} size={14} />{company ? "Azienda" : "Privato"}</span></td>
                         <td role="cell" data-label="Contatti"><div className="customer-contacts"><span><Icon name="mail" size={16} />{customer.email ? <a href={`mailto:${customer.email}`}>{customer.email}</a> : <span className="customer-muted">Email non specificata</span>}</span><span><Icon name="phone" size={16} />{customer.phone ? <a href={`tel:${customer.phone.replace(/[^+\d]/g, "")}`}>{customer.phone}</a> : <span className="customer-muted">Telefono non specificato</span>}</span></div></td>
                         <td role="cell" data-label="Indirizzo"><div className={`customer-address ${customer.address ? "" : "customer-muted"}`}><Icon name="pin" size={17} /><span>{customer.address || "Non specificato"}</span></div></td>
-                        <td role="cell" data-label="Preventivi" className="customer-status-cell">
-                          {quotesAvailable ? <><div className="customer-statuses">{statuses.length ? statuses.map(({ status, label, count }) => <span key={status} className={`customer-status customer-status-${status.toLowerCase()}`}>{status === "VIEWED" ? <Icon name="eye" size={15} /> : <span className="customer-status-dot" />}{count > 1 ? `${count} ` : ""}{label}</span>) : <span className="customer-muted">Nessun preventivo</span>}</div>{relatedQuotes.length > 0 && <span className="customer-quote-count">{relatedQuotes.length} {relatedQuotes.length === 1 ? "preventivo" : "preventivi totali"}</span>}</> : <span className="customer-muted">{quotesLoading ? "Caricamento…" : "Non disponibile"}</span>}
+                        <td role="cell" data-label="Preventivi" aria-busy={quotesLoading} className="customer-status-cell">
+                          {quotesAvailable ? <><div className="customer-statuses">{statuses.length ? statuses.map(({ status, label, count }) => <span key={status} className={`customer-status customer-status-${status.toLowerCase()}`}>{status === "VIEWED" ? <Icon name="eye" size={15} /> : <span className="customer-status-dot" />}{count > 1 ? `${count} ` : ""}{label}</span>) : <span className="customer-muted">Nessun preventivo</span>}</div>{relatedQuotes.length > 0 && <span className="customer-quote-count">{relatedQuotes.length} {relatedQuotes.length === 1 ? "preventivo" : "preventivi totali"}</span>}</> : quotesLoading ? <SkeletonLines lines={2} /> : <span className="customer-muted">Non disponibile</span>}
                         </td>
-                        <td role="cell" data-label="Totale generato" className="customer-total-cell"><strong>{quotesAvailable ? currency(total) : "—"}</strong></td>
+                        <td role="cell" data-label="Totale generato" aria-busy={quotesLoading} className="customer-total-cell"><strong>{quotesLoading ? <Skeleton width={100} height={22} /> : quotesAvailable ? currency(total) : "—"}</strong></td>
                         <td role="cell" className="customer-row-actions"><button type="button" className="sq-icon-button" disabled={busy} onClick={() => handleEdit(customer)} aria-label={`Modifica ${customer.name}`} title="Modifica cliente"><Icon name="edit" size={17} /><span className="customer-action-label">Modifica</span></button><button type="button" className="sq-icon-button customer-delete" disabled={busy} onClick={() => requestDelete(customer)} aria-label={`Elimina ${customer.name}`} title={deletingId === customer.id ? "Eliminazione…" : "Elimina cliente"}><Icon name="trash" size={17} /><span className="customer-action-label">Elimina</span></button></td>
                       </tr>
                     );

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { apiRequest } from "../api";
+import { PublicQuoteSkeleton } from "../components/LoadingSkeletons";
 import Icon from "../components/Icon";
 import "./PublicQuotePage.css";
 
@@ -77,7 +78,7 @@ function PublicQuote({ token }) {
         <span className="pq-portal"><span /> Area cliente</span>
       </header>
       <main className="pq-main">
-        {loading ? <section className="pq-state" role="status"><Icon name="document" size={36} /><h1>Caricamento preventivo</h1><p>Stiamo preparando tutti i dettagli della proposta.</p></section> : !quote ? (
+        {loading ? <PublicQuoteSkeleton /> : !quote ? (
           <section className="pq-state"><Icon name="document" size={36} /><h1>Preventivo non disponibile</h1><p role="alert">{error}</p><p>Verifica il link ricevuto oppure riprova.</p><button className="pq-primary" onClick={() => { setLoading(true); setAttempt(attempt + 1); }}><Icon name="refresh" /> Riprova</button></section>
         ) : <>
           <div className="pq-heading">
