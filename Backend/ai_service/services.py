@@ -111,6 +111,36 @@ REGOLE:
 
         response.raise_for_status()
 
+    except requests.Timeout as exc:
+        raise OllamaServiceError(
+            "Ollama non ha completato la generazione entro 120 secondi. "
+            "Riprova o usa un modello più leggero."
+        ) from exc
+
+    except requests.ConnectionError as exc:
+        raise OllamaServiceError(
+            "Impossibile raggiungere Ollama. Verifica che il servizio sia avviato."
+        ) from exc
+
+    except requests.HTTPError as exc:
+        error_detail = ""
+        try:
+            error_detail = str(response.json().get("error", "")).lower()
+        except (ValueError, AttributeError):
+            pass
+
+        if response.status_code == 404:
+            message = "Il modello AI configurato non è disponibile in Ollama."
+        elif "memory" in error_detail or "signal: killed" in error_detail:
+            message = (
+                "Ollama non riesce a caricare il modello AI. "
+                "Verifica la memoria disponibile o usa un modello più leggero."
+            )
+        else:
+            message = "Ollama ha restituito un errore durante la generazione."
+
+        raise OllamaServiceError(message) from exc
+
     except requests.RequestException as exc:
         raise OllamaServiceError(
             "Impossibile comunicare con Ollama."

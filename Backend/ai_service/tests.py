@@ -2,6 +2,7 @@ import json
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+import requests
 from django.test import SimpleTestCase, override_settings
 
 from .services import OllamaServiceError, generate_quote_text
@@ -60,3 +61,38 @@ class QuoteTextServiceTests(SimpleTestCase):
                 post.return_value.json.return_value = payload
                 with self.assertRaisesRegex(OllamaServiceError, message):
                     generate_quote_text(self.quote)
+
+    @patch("ai_service.services.requests.post")
+    def test_distinguishes_connection_failure_from_timeout(self, post):
+        for error, message in [
+            (requests.ConnectionError(), "Impossibile raggiungere Ollama"),
+            (requests.Timeout(), "entro 120 secondi"),
+        ]:
+            with self.subTest(error=type(error).__name__):
+                post.side_effect = error
+                with self.assertRaisesRegex(OllamaServiceError, message):
+                    generate_quote_text(self.quote)
+
+    @patch("ai_service.services.requests.post")
+    def test_explains_ollama_generation_errors(self, post):
+        for status_code, payload, message in [
+            (404, {"error": "model not found"}, "modello AI configurato non è disponibile"),
+            (500, {"error": "llama runner process has terminated: signal: killed"}, "memoria disponibile"),
+            (500, {"error": "model requires more system memory"}, "memoria disponibile"),
+            (500, {"error": "internal server error"}, "errore durante la generazione"),
+            (502, [], "errore durante la generazione"),
+        ]:
+            with self.subTest(status=status_code, payload=payload):
+                post.return_value.status_code = status_code
+                post.return_value.json.return_value = payload
+                post.return_value.raise_for_status.side_effect = requests.HTTPError()
+                with self.assertRaisesRegex(OllamaServiceError, message):
+                    generate_quote_text(self.quote)
+
+    @patch("ai_service.services.requests.post")
+    def test_handles_non_json_server_error(self, post):
+        post.return_value.status_code = 502
+        post.return_value.raise_for_status.side_effect = requests.HTTPError()
+        post.return_value.json.side_effect = ValueError("Not JSON")
+        with self.assertRaisesRegex(OllamaServiceError, "errore durante la generazione"):
+            generate_quote_text(self.quote)
