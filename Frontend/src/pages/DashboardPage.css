@@ -80,6 +80,7 @@
 .dash-amount { font-size: 13px; font-weight: 600; }
 .dash-date { font-size: 11px; color: var(--sq-muted); }
 .dash-open-quote { color: #aaa2ba !important; }
+.dash-action-label { display: none; }
 .dash-recent-footer { display: flex; align-items: center; gap: 7px; padding: 13px 24px; font-size: 11px; color: var(--sq-muted); background: #fafbff; }
 .dash-customer-list { display: grid; }
 .dash-customer-list > a { display: flex; align-items: center; gap: 10px; padding: 16px 0; border-bottom: 1px solid #f2f3f9; }
@@ -175,6 +176,23 @@
   .dash-recent-panel { padding: 0; }
   .dash-recent-panel > .dash-panel-heading { padding: 20px 16px 0; }
   .dash-text-link { font-size: 11px; }
+  .dash-table-scroll { overflow-x: visible; }
+  .dash-table { display: block; min-width: 0; }
+  .dash-table thead { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
+  .dash-table tbody { display: grid; gap: 12px; padding: 16px; background: var(--sq-bg); }
+  .dash-table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px 12px; min-width: 0; padding: 16px; border: 1px solid var(--sq-border); border-radius: 14px; background: #fff; }
+  .dash-table td { display: block; grid-column: 1 / -1; min-width: 0; padding: 0; border: 0; }
+  .dash-table td:first-child { padding-left: 0; }
+  .dash-table td:nth-child(2) { grid-column: 1; }
+  .dash-table td:nth-child(3) { grid-column: 2; }
+  .dash-table td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 6px; color: var(--sq-muted); font-size: 12px; font-weight: 500; }
+  .dash-table td strong { font-size: 15px; font-weight: 600; }
+  .dash-table td:first-child span { font-size: 13px; }
+  .dash-badge { font-size: 12px; }
+  .dash-amount { font-size: 15px; overflow-wrap: anywhere; }
+  .dash-date { font-size: 13px; }
+  .dash-open-quote { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 10px; border-radius: 9px; background: var(--sq-soft); color: var(--sq-primary-dark) !important; font-size: 13px; font-weight: 600; }
+  .dash-action-label { display: inline; }
   .dash-customers-panel .dash-customer-list > a { padding-block: 16px; }
   .dash-customer-value { font-size: 12px; }
   .dash-quick-actions { padding: 22px 18px; gap: 20px; }

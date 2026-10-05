@@ -258,27 +258,27 @@ export default function CustomersPage() {
         {loading ? <div className="customer-empty" role="status"><span className="customer-spinner" />Caricamento clienti…</div> : error ? <div className="customer-empty customer-alert" role="alert">{error}</div> : (
           <>
             <div className="customer-table-scroll" tabIndex={0} role="region" aria-label="Tabella clienti">
-              <table className="customer-table">
-                <thead><tr>
-                  <th scope="col">Cliente &amp;<br />denominazione</th><th scope="col">Tipologia</th><th scope="col">Contatti</th><th scope="col">Località / Indirizzo</th><th scope="col" className="customer-status-cell">Stato preventivi</th><th scope="col" className="customer-total-cell">Totale<br />generato</th><th scope="col"><span className="sq-visually-hidden">Azioni</span></th>
+              <table className="customer-table" role="table">
+                <thead role="rowgroup"><tr role="row">
+                  <th role="columnheader" scope="col">Cliente &amp;<br />denominazione</th><th role="columnheader" scope="col">Tipologia</th><th role="columnheader" scope="col">Contatti</th><th role="columnheader" scope="col">Località / Indirizzo</th><th role="columnheader" scope="col" className="customer-status-cell">Stato preventivi</th><th role="columnheader" scope="col" className="customer-total-cell">Totale<br />generato</th><th role="columnheader" scope="col"><span className="sq-visually-hidden">Azioni</span></th>
                 </tr></thead>
-                <tbody>
+                <tbody role="rowgroup">
                   {visibleCustomers.map((customer, index) => {
                     const relatedQuotes = customerQuotes.get(customer.id) || [];
                     const total = relatedQuotes.filter((quote) => quote.status === "ACCEPTED").reduce((sum, quote) => sum + Number(quote.total), 0);
                     const statuses = Object.entries(STATUS_LABELS).map(([status, label]) => ({ status, label, count: relatedQuotes.filter((quote) => quote.status === status).length })).filter((item) => item.count > 0);
                     const company = Boolean(customer.company?.trim());
                     return (
-                      <tr key={customer.id}>
-                        <td><div className="customer-identity"><span className={`customer-avatar customer-avatar-${index % 3}`}>{initials(customer.name)}</span><div><strong>{customer.name}</strong><span>{customer.company || "Cliente privato"}</span></div></div></td>
-                        <td><span className={`customer-type ${company ? "customer-type-company" : ""}`}><Icon name={company ? "store" : "user"} size={14} />{company ? "Azienda" : "Privato"}</span></td>
-                        <td><div className="customer-contacts"><span><Icon name="mail" size={16} />{customer.email ? <a href={`mailto:${customer.email}`}>{customer.email}</a> : <span className="customer-muted">Email non specificata</span>}</span><span><Icon name="phone" size={16} />{customer.phone ? <a href={`tel:${customer.phone.replace(/[^+\d]/g, "")}`}>{customer.phone}</a> : <span className="customer-muted">Telefono non specificato</span>}</span></div></td>
-                        <td><div className={`customer-address ${customer.address ? "" : "customer-muted"}`}><Icon name="pin" size={17} /><span>{customer.address || "Non specificato"}</span></div></td>
-                        <td className="customer-status-cell">
+                      <tr role="row" key={customer.id}>
+                        <td role="cell"><div className="customer-identity"><span className={`customer-avatar customer-avatar-${index % 3}`}>{initials(customer.name)}</span><div><strong>{customer.name}</strong><span>{customer.company || "Cliente privato"}</span></div></div></td>
+                        <td role="cell"><span className={`customer-type ${company ? "customer-type-company" : ""}`}><Icon name={company ? "store" : "user"} size={14} />{company ? "Azienda" : "Privato"}</span></td>
+                        <td role="cell" data-label="Contatti"><div className="customer-contacts"><span><Icon name="mail" size={16} />{customer.email ? <a href={`mailto:${customer.email}`}>{customer.email}</a> : <span className="customer-muted">Email non specificata</span>}</span><span><Icon name="phone" size={16} />{customer.phone ? <a href={`tel:${customer.phone.replace(/[^+\d]/g, "")}`}>{customer.phone}</a> : <span className="customer-muted">Telefono non specificato</span>}</span></div></td>
+                        <td role="cell" data-label="Indirizzo"><div className={`customer-address ${customer.address ? "" : "customer-muted"}`}><Icon name="pin" size={17} /><span>{customer.address || "Non specificato"}</span></div></td>
+                        <td role="cell" data-label="Preventivi" className="customer-status-cell">
                           {quotesAvailable ? <><div className="customer-statuses">{statuses.length ? statuses.map(({ status, label, count }) => <span key={status} className={`customer-status customer-status-${status.toLowerCase()}`}>{status === "VIEWED" ? <Icon name="eye" size={15} /> : <span className="customer-status-dot" />}{count > 1 ? `${count} ` : ""}{label}</span>) : <span className="customer-muted">Nessun preventivo</span>}</div>{relatedQuotes.length > 0 && <span className="customer-quote-count">{relatedQuotes.length} {relatedQuotes.length === 1 ? "preventivo" : "preventivi totali"}</span>}</> : <span className="customer-muted">{quotesLoading ? "Caricamento…" : "Non disponibile"}</span>}
                         </td>
-                        <td className="customer-total-cell"><strong>{quotesAvailable ? currency(total) : "—"}</strong></td>
-                        <td className="customer-row-actions"><button type="button" className="sq-icon-button" disabled={busy} onClick={() => handleEdit(customer)} aria-label={`Modifica ${customer.name}`} title="Modifica cliente"><Icon name="edit" size={17} /></button><button type="button" className="sq-icon-button customer-delete" disabled={busy} onClick={() => requestDelete(customer)} aria-label={`Elimina ${customer.name}`} title={deletingId === customer.id ? "Eliminazione…" : "Elimina cliente"}><Icon name="trash" size={17} /></button></td>
+                        <td role="cell" data-label="Totale generato" className="customer-total-cell"><strong>{quotesAvailable ? currency(total) : "—"}</strong></td>
+                        <td role="cell" className="customer-row-actions"><button type="button" className="sq-icon-button" disabled={busy} onClick={() => handleEdit(customer)} aria-label={`Modifica ${customer.name}`} title="Modifica cliente"><Icon name="edit" size={17} /><span className="customer-action-label">Modifica</span></button><button type="button" className="sq-icon-button customer-delete" disabled={busy} onClick={() => requestDelete(customer)} aria-label={`Elimina ${customer.name}`} title={deletingId === customer.id ? "Eliminazione…" : "Elimina cliente"}><Icon name="trash" size={17} /><span className="customer-action-label">Elimina</span></button></td>
                       </tr>
                     );
                   })}

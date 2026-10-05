@@ -180,6 +180,7 @@
 .quote-table-actions .sq-icon-button { flex-shrink: 0; width: 28px; height: 30px; background: transparent; color: #403b4e; }
 .quote-table-actions .sq-icon-button:hover { background: #e5eeff; color: var(--sq-primary); }
 .quote-table-actions .quote-delete:hover { color: #a32c28; background: #ffdad6; }
+.quote-action-label { display: none; }
 .quote-table-footer { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding: 14px 20px; background: #f8faff; font-size: 12px; color: var(--sq-muted); }
 .quote-table-footer strong { color: var(--sq-text-secondary); font-weight: 500; }
 .quote-pagination { display: flex; align-items: center; gap: 6px; }
@@ -318,10 +319,38 @@ body:has(.quote-preview-dialog[open]) { overflow: hidden; }
   .quote-history-heading { flex-direction: column; align-items: flex-start; gap: 14px; }
   .quote-history-heading h2 { font-size: 21px; }
   .quote-history-heading p { font-size: 12px; }
-  .quote-table-footer { padding: 12px; font-size: 11px; gap: 8px; }
-  .quote-pagination { gap: 4px; }
-  .quote-pagination .sq-icon-button { width: 28px; height: 32px; }
-  .quote-pagination > span { width: 28px; height: 32px; }
+  .quote-table-scroll { overflow-x: visible; }
+  .quote-table { display: block; min-width: 0; font-size: 14px; }
+  .quote-table thead { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
+  .quote-table tbody { display: grid; gap: 14px; padding: 14px; background: var(--sq-bg); }
+  .quote-table tbody:empty { display: none; }
+  .quote-table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 12px; min-width: 0; padding: 16px; border: 1px solid var(--sq-border); border-radius: 14px; background: #fff; }
+  .quote-table tbody tr.quote-current-row { border-color: var(--sq-primary); background: var(--sq-soft); }
+  .quote-table td { display: block; grid-column: 1 / -1; min-width: 0; padding: 0; }
+  .quote-table td:first-child { padding-left: 0; }
+  .quote-table td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 6px; color: var(--sq-muted); font-size: 12px; font-weight: 500; }
+  .quote-table td:nth-child(2) { order: 4; }
+  .quote-table td:nth-child(3) { order: 1; grid-column: 1; }
+  .quote-table td:nth-child(4) { order: 2; grid-column: 2; }
+  .quote-table td:nth-child(5) { order: 3; }
+  .quote-table td:nth-child(6) { order: 5; }
+  .quote-table td:nth-child(7) { order: 6; padding-top: 14px; border-top: 1px solid var(--sq-border); }
+  .quote-table-title strong { font-weight: 600; }
+  .quote-table td > small { margin-top: 6px; font-size: 13px; }
+  .quote-table-amount strong { display: block; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .quote-table-items { gap: 10px; }
+  .quote-table-items li { font-size: 13px; }
+  .quote-table-delivery { font-size: 13px; line-height: 1.6; }
+  .quote-public-link { min-width: 0; }
+  .quote-public-link button, .quote-public-link a { flex-shrink: 0; justify-content: center; width: 40px; height: 44px; }
+  .quote-share-actions .sq-button { min-height: 44px; padding: 10px 12px; }
+  .quote-publish-link { justify-content: center; width: 100%; min-height: 44px; }
+  .quote-table-actions .sq-icon-button { flex: 1; gap: 8px; width: auto; height: 44px; padding: 10px; background: var(--sq-soft); font-size: 13px; font-weight: 600; }
+  .quote-action-label { display: inline; }
+  .quote-table-footer { flex-wrap: wrap; gap: 12px; padding: 12px; font-size: 11px; }
+  .quote-pagination { gap: 4px; margin-left: auto; }
+  .quote-pagination .sq-icon-button { width: 44px; height: 44px; }
+  .quote-pagination > span { width: 44px; height: 44px; }
   .quote-preview-dialog { padding: 22px; }
   .quote-preview-dialog header h2 { font-size: 22px; }
   .quote-preview-dialog table { min-width: 460px; }
