@@ -115,6 +115,12 @@
 .quote-editor-public-link label { color: #777587; }
 .quote-editor-public-link input { width: 100%; min-width: 0; padding: 8px 0; border: 0; background: transparent; color: var(--sq-primary-dark); font-size: 12px; }
 .quote-editor-public-link button { display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; color: var(--sq-primary-dark); background: transparent; }
+.quote-share { margin-top: 10px; }
+.quote-share-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.quote-share-actions .sq-button { min-height: 38px; padding: 9px 10px; gap: 6px; font-size: 12px; background: var(--sq-soft); }
+.sq-workspace .quote-share-whatsapp, .quote-share-whatsapp .sq-icon { color: #006a61; }
+.quote-share-actions .sq-button:hover { background: #e9edff; }
+.quote-share-help { margin-top: 10px; color: #777587; font-size: 12px; line-height: 1.6; }
 .quote-conversion-card { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 22px; border-radius: 15px; background: white; box-shadow: 0 1px 2px #1428470a; }
 .quote-conversion-card h2 { font-size: 16px; font-weight: 500; }
 .quote-conversion-card p { font-size: 12px; color: #777587; }

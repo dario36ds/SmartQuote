@@ -32,6 +32,7 @@ import {
   MdOutlineExpandMore,
   MdOutlineRefresh,
 } from "react-icons/md";
+import { FaWhatsapp } from "react-icons/fa";
 
 const icons = {
   grid: MdOutlineGridView,
@@ -46,6 +47,7 @@ const icons = {
   chevron: MdChevronRight,
   filters: MdOutlineTune,
   mail: MdOutlineMail,
+  whatsapp: FaWhatsapp,
   phone: MdOutlineCall,
   pin: MdOutlineLocationOn,
   store: MdOutlineStorefront,

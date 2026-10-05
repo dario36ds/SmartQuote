@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router";
 import { apiRequest } from "../api";
 import AuthenticatedLayout from "../components/AuthenticatedLayout";
 import Icon from "../components/Icon";
+import QuoteShareActions from "../components/QuoteShareActions";
 import { useAuth } from "../context/AuthContext";
 import "./QuotesPage.css";
 
@@ -227,12 +228,15 @@ export default function QuotesPage() {
   }
 
   async function handleGenerateText() {
-    if (editorDisabled || isPublished || !isEditing || hasUnsavedData) return;
+    if (editorDisabled || isPublished || !formRef.current.reportValidity()) return;
     setGenerating(true);
     setAiError("");
     setFormSuccess("");
     try {
-      const data = await apiRequest(`/quotes/${editingId}/generate-text/`, { method: "POST", token, body: { tone } });
+      const quote = !savedQuote || hasUnsavedChanges ? await saveQuote() : savedQuote;
+      if (!quote) return;
+      setFormSuccess("");
+      const data = await apiRequest(`/quotes/${quote.id}/generate-text/`, { method: "POST", token, body: { tone } });
       setQuoteForm((current) => ({ ...current, description: data.generated_text }));
       setFormSuccess("Descrizione generata. Rivedi il testo e salva le modifiche.");
     } catch (err) {
@@ -388,7 +392,7 @@ export default function QuotesPage() {
             <PanelHeading step={<Icon name="sparkle" size={20} />} title="Testo di Presentazione Generato da AI" subtitle="Una descrizione personalizzata per il tuo cliente" />
             <div className="quote-tone-options" role="group" aria-label="Tono del testo AI">{Object.entries(TONES).map(([value, label]) => <button key={value} type="button" aria-pressed={tone === value} className={tone === value ? "is-selected" : ""} onClick={() => setTone(value)}>{label}</button>)}</div>
             <div className="quote-ai-text"><blockquote>{quoteForm.description || "La descrizione del preventivo apparirà qui. Puoi scriverla nei dati generali oppure generarla con l’assistente AI."}</blockquote><button type="button" className="sq-icon-button" disabled={!quoteForm.description} aria-label="Copia descrizione" title="Copia descrizione" onClick={() => copyText(quoteForm.description, "Descrizione copiata.")}><Icon name="copy" size={17} /></button></div>
-            <div className="quote-ai-actions"><p>{isPublished ? "Il testo di un preventivo pubblicato non può essere rigenerato." : !isEditing ? "Salva la bozza per generare il testo con AI." : hasUnsavedData ? "Salva i dati e le voci prima di generare il testo." : "Rivedi la descrizione e salva per includerla nel preventivo pubblico."}</p><button type="button" className="sq-button sq-button-primary" disabled={isPublished || !isEditing || hasUnsavedData} onClick={handleGenerateText}><Icon name={generating ? "refresh" : "sparkle"} size={18} />{generating ? "Generazione…" : "Genera testo AI"}</button></div>
+            <div className="quote-ai-actions"><p>{isPublished ? "Il testo di un preventivo pubblicato non può essere rigenerato." : "Puoi generare o rigenerare il testo in qualsiasi momento. Salviamo prima i dati in bozza; poi rivedi il testo e salva le modifiche."}</p><button type="button" className="sq-button sq-button-primary" disabled={editorDisabled || isPublished} onClick={handleGenerateText}><Icon name={generating ? "refresh" : "sparkle"} size={18} />{generating ? saving ? "Salvataggio bozza…" : "Generazione…" : "Genera testo AI"}</button></div>
             {aiError && <p className="quote-alert" role="alert">{aiError}</p>}
           </section>
         </fieldset>
@@ -402,6 +406,7 @@ export default function QuotesPage() {
             <div className="quote-summary-actions"><button type="submit" className="sq-button sq-button-secondary" disabled={editorDisabled || isPublished}><Icon name="save" size={17} />{saving ? "Salvataggio…" : isEditing ? "Salva modifiche" : "Salva bozza"}</button><button type="button" className="sq-button sq-button-secondary" disabled={loading || Boolean(error)} onClick={() => setPreviewOpen(true)}><Icon name="eye" size={17} />Anteprima</button></div>
             {isEditing && <button type="button" className="quote-cancel-edit" disabled={busy} onClick={resetForm}>{isPublished ? "Nuova bozza" : "Annulla modifica / Nuova bozza"}</button>}
             {savedQuote?.status !== "DRAFT" && savedQuote?.public_token && <div className="quote-editor-public-link"><label htmlFor="editor-public-link">Link pubblico del preventivo</label><input id="editor-public-link" value={publicUrl(savedQuote)} readOnly onFocus={(event) => event.target.select()} /><button type="button" onClick={() => copyText(publicUrl(savedQuote), "Link pubblico copiato.")}><Icon name="copy" size={15} />Copia link</button></div>}
+            {isPublished && <QuoteShareActions quote={savedQuote} customer={customerById.get(savedQuote.customer)} publicUrl={publicUrl(savedQuote)} showHelp />}
             <div className="quote-summary-notes"><p><Icon name="external" size={16} />Condividi il preventivo con il cliente tramite link pubblico.</p><p><Icon name="eye" size={16} />Segui lo stato di invio, visualizzazione e accettazione.</p></div>
             {formError && <p className="quote-alert" role="alert">{formError}</p>}
           </section>
@@ -417,7 +422,7 @@ export default function QuotesPage() {
               <td><div className="quote-table-title"><strong>{quote.title}</strong>{editingId === quote.id && <span>ATTUALE</span>}</div><small>Cliente: {customerById.get(quote.customer)?.name || (customersLoading ? "Caricamento…" : "Non disponibile")}</small></td>
               <td><ul className="quote-table-items">{quote.items.map((item) => <li key={item.id}><span>{item.description} <small>({Number(item.quantity).toLocaleString("it-IT")}×)</small></span><span>{amount(item.unit_price)}</span></li>)}</ul></td>
               <td><StatusBadge status={quote.status} /></td><td className="quote-table-amount"><strong>{amount(quote.total)}</strong></td><td><span className="quote-table-delivery"><Icon name="calendar" size={14} />{quote.delivery_time || "Non specificato"}</span></td>
-              <td>{quote.status !== "DRAFT" && quote.public_token ? <div className="quote-public-link"><input type="text" readOnly aria-label={`Link pubblico di ${quote.title}`} value={publicUrl(quote)} onFocus={(event) => event.target.select()} /><button type="button" aria-label={`Copia link di ${quote.title}`} title="Copia link" onClick={() => copyText(publicUrl(quote), "Link pubblico copiato.")}><Icon name="copy" size={15} /></button><a href={publicUrl(quote)} target="_blank" rel="noreferrer" aria-label={`Apri preventivo ${quote.title}`} title="Apri preventivo"><Icon name="external" size={15} /></a></div> : <button type="button" className="quote-publish-link" disabled={busy || (editingId === quote.id && hasUnsavedChanges)} onClick={() => handlePublish(quote)}><Icon name="send" size={14} />{publishingId === quote.id ? "Pubblicazione…" : "Pubblica link"}</button>}</td>
+              <td>{quote.status !== "DRAFT" && quote.public_token ? <><div className="quote-public-link"><input type="text" readOnly aria-label={`Link pubblico di ${quote.title}`} value={publicUrl(quote)} onFocus={(event) => event.target.select()} /><button type="button" aria-label={`Copia link di ${quote.title}`} title="Copia link" onClick={() => copyText(publicUrl(quote), "Link pubblico copiato.")}><Icon name="copy" size={15} /></button><a href={publicUrl(quote)} target="_blank" rel="noreferrer" aria-label={`Apri preventivo ${quote.title}`} title="Apri preventivo"><Icon name="external" size={15} /></a></div><QuoteShareActions quote={quote} customer={customerById.get(quote.customer)} publicUrl={publicUrl(quote)} /></> : <button type="button" className="quote-publish-link" disabled={busy || (editingId === quote.id && hasUnsavedChanges)} onClick={() => handlePublish(quote)}><Icon name="send" size={14} />{publishingId === quote.id ? "Pubblicazione…" : "Pubblica link"}</button>}</td>
               <td><div className="quote-table-actions"><button type="button" className="sq-icon-button" disabled={editorDisabled || quote.status !== "DRAFT"} onClick={() => handleEdit(quote)} aria-label={`Modifica ${quote.title}`} title="Modifica preventivo"><Icon name="edit" size={17} /></button><button type="button" className="sq-icon-button quote-delete" disabled={busy} onClick={() => handleDelete(quote)} aria-label={`Elimina ${quote.title}`} title={deletingId === quote.id ? "Eliminazione…" : "Elimina preventivo"}><Icon name="trash" size={17} /></button></div></td>
             </tr>)}
           </tbody></table></div>
