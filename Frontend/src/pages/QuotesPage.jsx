@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router";
 
 import { apiRequest } from "../api";
 import AuthenticatedLayout from "../components/AuthenticatedLayout";
+import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import Icon from "../components/Icon";
 import QuoteShareActions from "../components/QuoteShareActions";
 import { useAuth } from "../context/AuthContext";
@@ -68,6 +69,7 @@ export default function QuotesPage() {
   const [editingId, setEditingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [tone, setTone] = useState("professional");
   const [generating, setGenerating] = useState(false);
   const [aiError, setAiError] = useState("");
@@ -307,18 +309,28 @@ export default function QuotesPage() {
     if (quote) await publishQuote(quote);
   }
 
-  async function handleDelete(quote) {
+  function requestDelete(quote) {
     if (busy) return;
-    const warning = quote.status === "DRAFT"
-      ? "L’eliminazione è definitiva."
-      : "L’eliminazione è definitiva e il link pubblico non sarà più disponibile.";
-    if (!window.confirm(`Vuoi eliminare il preventivo "${quote.title}"?\n${warning}`)) return;
+    setDeleteError("");
+    setDeleteTarget(quote);
+  }
+
+  function cancelDelete() {
+    setDeleteTarget(null);
+    setDeleteError("");
+  }
+
+  async function handleDelete() {
+    if (busy || !deleteTarget) return;
+    const quote = deleteTarget;
     setDeleteError("");
     setDeletingId(quote.id);
     try {
       await apiRequest(`/quotes/${quote.id}/`, { method: "DELETE", token });
       setQuotes((current) => current.filter((item) => item.id !== quote.id));
       if (editingId === quote.id) resetForm();
+      setDeleteTarget(null);
+      setFormSuccess("Preventivo eliminato.");
     } catch (err) {
       setDeleteError(err.message);
     } finally {
@@ -358,7 +370,6 @@ export default function QuotesPage() {
       {error && <p className="quote-alert" role="alert">{error}</p>}
       {customersError && <p className="quote-alert" role="alert">Impossibile caricare i clienti: {customersError}</p>}
       {!customersLoading && !customersError && customers.length === 0 && <div className="quote-message">Aggiungi un cliente per creare il tuo primo preventivo. <Link to="/customers">Vai ai clienti <Icon name="chevron" size={16} /></Link></div>}
-      {deleteError && <p className="quote-alert" role="alert">{deleteError}</p>}
       {publishError && <p className="quote-alert" role="alert">{publishError}</p>}
       {formSuccess && <p className="quote-success" role="status">{formSuccess}</p>}
       {isPublished && <p className="quote-message" role="status">Questo preventivo è pubblicato e non può essere modificato. Puoi consultarlo oppure eliminarlo dall’elenco dopo conferma.</p>}
@@ -442,7 +453,7 @@ export default function QuotesPage() {
               <td><ul className="quote-table-items">{quote.items.map((item) => <li key={item.id}><span>{item.description} <small>({Number(item.quantity).toLocaleString("it-IT")}×)</small></span><span>{amount(item.unit_price)}</span></li>)}</ul></td>
               <td><StatusBadge status={quote.status} /></td><td className="quote-table-amount"><strong>{amount(quote.total)}</strong></td><td><span className="quote-table-delivery"><Icon name="calendar" size={14} />{quote.delivery_time || "Non specificato"}</span></td>
               <td>{quote.status !== "DRAFT" && quote.public_token ? <><div className="quote-public-link"><input type="text" readOnly aria-label={`Link pubblico di ${quote.title}`} value={publicUrl(quote)} onFocus={(event) => event.target.select()} /><button type="button" aria-label={`Copia link di ${quote.title}`} title="Copia link" onClick={() => copyText(publicUrl(quote), "Link pubblico copiato.")}><Icon name="copy" size={15} /></button><a href={publicUrl(quote)} target="_blank" rel="noreferrer" aria-label={`Apri preventivo ${quote.title}`} title="Apri preventivo"><Icon name="external" size={15} /></a></div><QuoteShareActions quote={quote} customer={customerById.get(quote.customer)} publicUrl={publicUrl(quote)} /></> : <button type="button" className="quote-publish-link" disabled={busy || (editingId === quote.id && hasUnsavedChanges)} onClick={() => handlePublish(quote)}><Icon name="send" size={14} />{publishingId === quote.id ? "Pubblicazione…" : "Pubblica link"}</button>}</td>
-              <td><div className="quote-table-actions"><button type="button" className="sq-icon-button" disabled={editorDisabled || quote.status !== "DRAFT"} onClick={() => handleEdit(quote)} aria-label={`Modifica ${quote.title}`} title="Modifica preventivo"><Icon name="edit" size={17} /></button><button type="button" className="sq-icon-button quote-delete" disabled={busy} onClick={() => handleDelete(quote)} aria-label={`Elimina ${quote.title}`} title={deletingId === quote.id ? "Eliminazione…" : "Elimina preventivo"}><Icon name="trash" size={17} /></button></div></td>
+              <td><div className="quote-table-actions"><button type="button" className="sq-icon-button" disabled={editorDisabled || quote.status !== "DRAFT"} onClick={() => handleEdit(quote)} aria-label={`Modifica ${quote.title}`} title="Modifica preventivo"><Icon name="edit" size={17} /></button><button type="button" className="sq-icon-button quote-delete" disabled={busy} onClick={() => requestDelete(quote)} aria-label={`Elimina ${quote.title}`} title={deletingId === quote.id ? "Eliminazione…" : "Elimina preventivo"}><Icon name="trash" size={17} /></button></div></td>
             </tr>)}
           </tbody></table></div>
           {!loading && !error && filteredQuotes.length === 0 && <div className="quote-empty"><Icon name={search || customerId || statusFilter ? "search" : "quote"} size={36} /><h3>{quotes.length ? "Nessun preventivo trovato" : "Il tuo prossimo preventivo inizia qui"}</h3><p>{quotes.length ? "Modifica la ricerca o i filtri per vedere altri preventivi." : "Compila i dati e aggiungi i servizi per salvare la prima bozza."}</p></div>}
@@ -455,6 +466,21 @@ export default function QuotesPage() {
         <p className="quote-preview-customer">{selectedCustomer?.name || "Cliente da selezionare"}{selectedCustomer?.company && ` · ${selectedCustomer.company}`}</p><p className="quote-preview-description">{quoteForm.description || "Nessuna descrizione."}</p>
         <div className="quote-preview-table-scroll"><table><caption className="sq-visually-hidden">Servizi del preventivo</caption><thead><tr><th scope="col">Servizio</th><th scope="col">Quantità</th><th scope="col">Prezzo</th><th scope="col">Totale</th></tr></thead><tbody>{items.map((item) => <tr key={item.key}><td>{item.description || "Servizio da definire"}</td><td>{item.quantity || "—"}</td><td>{amount(item.unit_price || 0)}</td><td>{amount(lineTotal(item))}</td></tr>)}</tbody></table></div><p className="quote-preview-total">Totale preventivo <strong>{amount(previewTotal)}</strong></p><p className="quote-preview-delivery">Consegna: {quoteForm.delivery_time || "Da definire"}</p>
       </dialog>
+
+      <DeleteConfirmationDialog
+        open={Boolean(deleteTarget)}
+        title="Eliminare il preventivo?"
+        warning={deleteTarget?.status === "DRAFT"
+          ? "L’eliminazione è definitiva."
+          : "L’eliminazione è definitiva e il link pubblico non sarà più disponibile."}
+        confirmLabel="Elimina preventivo"
+        busy={deletingId !== null}
+        error={deleteError}
+        onConfirm={handleDelete}
+        onCancel={cancelDelete}
+      >
+        Stai per eliminare il preventivo <strong>«{deleteTarget?.title}»</strong>.
+      </DeleteConfirmationDialog>
     </AuthenticatedLayout>
   );
 }

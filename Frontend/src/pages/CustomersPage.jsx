@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { apiRequest } from "../api";
 import AuthenticatedLayout from "../components/AuthenticatedLayout";
+import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import Icon from "../components/Icon";
 import { useAuth } from "../context/AuthContext";
 import "./CustomersPage.css";
@@ -42,6 +43,7 @@ export default function CustomersPage() {
   const [editingId, setEditingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -183,9 +185,20 @@ export default function CustomersPage() {
     }
   }
 
-  async function handleDelete(customer) {
+  function requestDelete(customer) {
     if (busy) return;
-    if (!window.confirm(`Vuoi eliminare il cliente "${customer.name}"? Verranno eliminati anche i suoi preventivi.`)) return;
+    setDeleteError("");
+    setDeleteTarget(customer);
+  }
+
+  function cancelDelete() {
+    setDeleteTarget(null);
+    setDeleteError("");
+  }
+
+  async function handleDelete() {
+    if (busy || !deleteTarget) return;
+    const customer = deleteTarget;
     setDeleteError("");
     setDeletingId(customer.id);
     try {
@@ -194,6 +207,7 @@ export default function CustomersPage() {
       setQuotes((current) => current.filter((quote) => quote.customer !== customer.id));
       setNotice("Cliente eliminato.");
       if (editingId === customer.id) handleCancelEdit();
+      setDeleteTarget(null);
     } catch (err) {
       setDeleteError(err.message);
     } finally {
@@ -224,7 +238,6 @@ export default function CustomersPage() {
       </section>
 
       {quotesError && <p className="customer-alert" role="alert">Impossibile caricare i riepiloghi dei preventivi: {quotesError}</p>}
-      {deleteError && <p className="customer-alert" role="alert">{deleteError}</p>}
       {notice && <div className="customer-notice" role="status">{notice}<button className="sq-icon-button" type="button" aria-label="Chiudi messaggio" onClick={() => setNotice("")}><Icon name="close" size={16} /></button></div>}
 
       <section className="customer-directory" aria-label="Elenco clienti" aria-busy={loading}>
@@ -265,7 +278,7 @@ export default function CustomersPage() {
                           {quotesAvailable ? <><div className="customer-statuses">{statuses.length ? statuses.map(({ status, label, count }) => <span key={status} className={`customer-status customer-status-${status.toLowerCase()}`}>{status === "VIEWED" ? <Icon name="eye" size={15} /> : <span className="customer-status-dot" />}{count > 1 ? `${count} ` : ""}{label}</span>) : <span className="customer-muted">Nessun preventivo</span>}</div>{relatedQuotes.length > 0 && <span className="customer-quote-count">{relatedQuotes.length} {relatedQuotes.length === 1 ? "preventivo" : "preventivi totali"}</span>}</> : <span className="customer-muted">{quotesLoading ? "Caricamento…" : "Non disponibile"}</span>}
                         </td>
                         <td className="customer-total-cell"><strong>{quotesAvailable ? currency(total) : "—"}</strong></td>
-                        <td className="customer-row-actions"><button type="button" className="sq-icon-button" disabled={busy} onClick={() => handleEdit(customer)} aria-label={`Modifica ${customer.name}`} title="Modifica cliente"><Icon name="edit" size={17} /></button><button type="button" className="sq-icon-button customer-delete" disabled={busy} onClick={() => handleDelete(customer)} aria-label={`Elimina ${customer.name}`} title={deletingId === customer.id ? "Eliminazione…" : "Elimina cliente"}><Icon name="trash" size={17} /></button></td>
+                        <td className="customer-row-actions"><button type="button" className="sq-icon-button" disabled={busy} onClick={() => handleEdit(customer)} aria-label={`Modifica ${customer.name}`} title="Modifica cliente"><Icon name="edit" size={17} /></button><button type="button" className="sq-icon-button customer-delete" disabled={busy} onClick={() => requestDelete(customer)} aria-label={`Elimina ${customer.name}`} title={deletingId === customer.id ? "Eliminazione…" : "Elimina cliente"}><Icon name="trash" size={17} /></button></td>
                       </tr>
                     );
                   })}
@@ -295,6 +308,19 @@ export default function CustomersPage() {
           <div className="customer-dialog-actions"><button className="sq-button sq-button-secondary" type="button" onClick={handleCancelEdit} disabled={busy}>Annulla</button><button className="sq-button sq-button-primary" type="submit" disabled={busy}><Icon name="check" size={18} />{saving ? "Salvataggio…" : isEditing ? "Salva modifiche" : "Crea cliente"}</button></div>
         </form>
       </dialog>
+
+      <DeleteConfirmationDialog
+        open={Boolean(deleteTarget)}
+        title="Eliminare il cliente?"
+        warning="Verranno eliminati anche tutti i suoi preventivi e i relativi link pubblici non saranno più disponibili. L’eliminazione è definitiva."
+        confirmLabel="Elimina cliente"
+        busy={deletingId !== null}
+        error={deleteError}
+        onConfirm={handleDelete}
+        onCancel={cancelDelete}
+      >
+        Stai per eliminare il cliente <strong>«{deleteTarget?.name}»</strong>.
+      </DeleteConfirmationDialog>
     </AuthenticatedLayout>
   );
 }
