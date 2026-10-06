@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router";
+import { useLocation, useSearchParams } from "react-router";
 
 import { apiRequest } from "../api";
 import AuthenticatedLayout from "../components/AuthenticatedLayout";
@@ -54,10 +54,15 @@ function PanelHeading({ step, title, subtitle, children }) {
 
 export default function QuotesPage() {
   const { token } = useAuth();
+  const { key: locationKey } = useLocation();
   const [searchParams] = useSearchParams();
   const requestedQuoteId = searchParams.get("quote");
+  const reminderRequested = searchParams.get("remind") === "1";
   const [quotes, setQuotes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuoteRequest, setLoadedQuoteRequest] = useState(null);
+  const loading = !loadedQuoteRequest || loadedQuoteRequest.token !== token ||
+    loadedQuoteRequest.quoteId !== requestedQuoteId || loadedQuoteRequest.reminder !== reminderRequested ||
+    loadedQuoteRequest.locationKey !== locationKey;
   const [error, setError] = useState("");
   const [customers, setCustomers] = useState([]);
   const [customersLoading, setCustomersLoading] = useState(true);
@@ -91,11 +96,13 @@ export default function QuotesPage() {
   const [copyNotice, setCopyNotice] = useState("");
   const formRef = useRef(null);
   const previewRef = useRef(null);
+  const reminderRef = useRef(null);
   const customerCreatedRef = useRef(false);
   const busy = saving || customerSaving || deletingId !== null || generating || publishingId !== null;
   const isEditing = editingId !== null;
   const savedQuote = quotes.find((quote) => quote.id === editingId);
   const isPublished = Boolean(savedQuote && savedQuote.status !== "DRAFT");
+  const canRemind = Boolean(savedQuote && ["SENT", "VIEWED"].includes(savedQuote.status));
   const dataLoading = loading || customersLoading;
   const editorDisabled = busy || loading || Boolean(error) || customersLoading || Boolean(customersError);
   const hasUnsavedData = isEditing && (
@@ -141,9 +148,11 @@ export default function QuotesPage() {
         const data = await apiRequest("/quotes/", { token });
         if (active) {
           setQuotes(data);
+          setError("");
           const requestedQuote = data.find((quote) => String(quote.id) === requestedQuoteId);
           if (requestedQuote) {
             setEditingId(requestedQuote.id);
+            setEditorOpen(true);
             setQuoteForm({ customer: String(requestedQuote.customer), title: requestedQuote.title, description: requestedQuote.description, delivery_time: requestedQuote.delivery_time });
             setItems(requestedQuote.items.length ? requestedQuote.items.map(createQuoteItem) : [createQuoteItem()]);
           }
@@ -151,7 +160,7 @@ export default function QuotesPage() {
       } catch (err) {
         if (active) setError(err.message);
       } finally {
-        if (active) setLoading(false);
+        if (active) setLoadedQuoteRequest({ token, quoteId: requestedQuoteId, reminder: reminderRequested, locationKey });
       }
     }
     async function loadCustomers() {
@@ -167,7 +176,13 @@ export default function QuotesPage() {
     loadQuotes();
     loadCustomers();
     return () => { active = false; };
-  }, [token, requestedQuoteId]);
+  }, [token, requestedQuoteId, reminderRequested, locationKey]);
+
+  useEffect(() => {
+    if (!reminderRequested || dataLoading || String(editingId) !== requestedQuoteId) return;
+    const frame = requestAnimationFrame(() => reminderRef.current?.scrollIntoView({ block: "center" }));
+    return () => cancelAnimationFrame(frame);
+  }, [reminderRequested, dataLoading, editingId, requestedQuoteId]);
 
   useEffect(() => {
     const dialog = previewRef.current;
@@ -507,7 +522,8 @@ export default function QuotesPage() {
               <div className="quote-summary-actions"><button type="submit" className="sq-button sq-button-secondary" disabled={editorDisabled || isPublished}><Icon name="save" size={17} />{saving ? "Salvataggio…" : isEditing ? "Salva modifiche" : "Salva bozza"}</button><button type="button" className="sq-button sq-button-secondary" disabled={loading || Boolean(error)} onClick={() => setPreviewOpen(true)}><Icon name="eye" size={17} />Anteprima</button></div>
               {isEditing && <button type="button" className="quote-cancel-edit" disabled={busy} onClick={resetForm}>{isPublished ? "Nuova bozza" : "Annulla modifica / Nuova bozza"}</button>}
               {savedQuote?.status !== "DRAFT" && savedQuote?.public_token && <div className="quote-editor-public-link"><label htmlFor="editor-public-link">Link pubblico del preventivo</label><input id="editor-public-link" value={publicUrl(savedQuote)} readOnly onFocus={(event) => event.target.select()} /><button type="button" onClick={() => copyText(publicUrl(savedQuote), "Link pubblico copiato.")}><Icon name="copy" size={15} />Copia link</button></div>}
-              {isPublished && <QuoteShareActions quote={savedQuote} customer={customerById.get(savedQuote.customer)} publicUrl={publicUrl(savedQuote)} showHelp />}
+              {reminderRequested && isPublished && <p ref={reminderRef} className="quote-reminder-note" role="status">{canRemind ? `${customerById.get(savedQuote.customer)?.name || "Il cliente"} non ha ancora risposto. Puoi preparare un sollecito con i pulsanti qui sotto.` : "Il cliente ha già risposto a questo preventivo. Il promemoria è concluso."}</p>}
+              {isPublished && <QuoteShareActions quote={savedQuote} customer={customerById.get(savedQuote.customer)} publicUrl={publicUrl(savedQuote)} showHelp reminder={reminderRequested && canRemind} />}
               <div className="quote-summary-notes"><p><Icon name="external" size={16} />Condividi il preventivo con il cliente tramite link pubblico.</p><p><Icon name="eye" size={16} />Segui lo stato di invio, visualizzazione e accettazione.</p></div>
               {formError && <p className="quote-alert" role="alert">{formError}</p>}
             </>}

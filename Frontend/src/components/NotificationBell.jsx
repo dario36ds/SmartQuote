@@ -6,9 +6,9 @@ import { apiRequest } from "../api";
 import { useAuth } from "../context/AuthContext";
 import Icon from "./Icon";
 import { SkeletonLines } from "./LoadingSkeletons";
+import { notificationMessage, notificationQuotePath, notificationTitle } from "../utils/notifications";
 import "./NotificationBell.css";
 
-const notificationMessage = (notification) => `${notification.customer_name} ha ${notification.status === "ACCEPTED" ? "accettato" : "rifiutato"} «${notification.quote_title}».`;
 const notificationDate = (value) => new Date(value).toLocaleString("it-IT", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
 export default function NotificationBell() {
@@ -47,7 +47,7 @@ export default function NotificationBell() {
         knownIds = new Set(received.map((notification) => notification.id));
         setResult({ token, data: response });
         setError("");
-        if (added.length) setToast({ token, message: added.length === 1 ? notificationMessage(added[0]) : `${added.length} nuove risposte ai preventivi.` });
+        if (added.length) setToast({ token, message: added.length === 1 ? notificationMessage(added[0]) : `${added.length} nuove notifiche sui preventivi.` });
       } catch (err) {
         if (active && version === versionRef.current) setError(`Impossibile caricare le notifiche: ${err.message}`);
       } finally {
@@ -109,9 +109,10 @@ export default function NotificationBell() {
           unread_count: notification ? Math.max(0, current.data.unread_count - (notification.read_at ? 0 : 1)) : 0,
         },
       } : current);
-      if (notification?.quote) {
+      const quotePath = notification ? notificationQuotePath(response) : null;
+      if (quotePath) {
         panelRef.current.open = false;
-        navigate(`/quotes?quote=${notification.quote}`);
+        navigate(quotePath);
       }
     } catch (err) {
       if (activeRef.current) setError(`Impossibile aggiornare le notifiche: ${err.message}`);
@@ -135,10 +136,10 @@ export default function NotificationBell() {
         {error && <p className="sq-notification-error" role="alert">{error}</p>}
         <div className="sq-notification-list" aria-busy={loading}>
           {loading ? <div className="sq-notification-empty" role="status"><span className="sq-visually-hidden">Caricamento notifiche…</span><SkeletonLines /></div> : notifications.length ? notifications.map((notification) => <button key={notification.id} type="button" className={`sq-notification-item ${!notification.read_at ? "is-unread" : ""}`} disabled={marking !== null} onClick={() => markRead(notification)} aria-label={`${notificationMessage(notification)} ${notification.quote ? "Apri preventivo" : "Preventivo eliminato"}${!notification.read_at ? ", non letta" : ""}`}>
-            <span className={`sq-notification-symbol sq-notification-symbol-${notification.status.toLowerCase()}`}><Icon name={notification.status === "ACCEPTED" ? "check" : "close"} size={22} /></span>
-            <span className="sq-notification-text"><strong>Preventivo {notification.status === "ACCEPTED" ? "accettato" : "rifiutato"}</strong><span>{notificationMessage(notification)}</span><time dateTime={notification.created_at}>{notificationDate(notification.created_at)}</time>{!notification.quote && <small>Preventivo eliminato</small>}</span>
+            <span className={`sq-notification-symbol sq-notification-symbol-${notification.status.toLowerCase()}`}><Icon name={notification.status === "REMINDER" ? "bell" : notification.status === "ACCEPTED" ? "check" : "close"} size={22} /></span>
+            <span className="sq-notification-text"><strong>{notificationTitle(notification)}</strong><span>{notificationMessage(notification)}</span><time dateTime={notification.created_at}>{notificationDate(notification.created_at)}</time>{notification.can_remind && <small>Apri e prepara il sollecito</small>}{!notification.quote && <small>Preventivo eliminato</small>}</span>
             {!notification.read_at && <span className="sq-notification-dot" aria-hidden="true" />}
-          </button>) : !error && <p className="sq-notification-empty">Nessuna notifica. Le risposte dei clienti ai preventivi appariranno qui.</p>}
+          </button>) : !error && <p className="sq-notification-empty">Nessuna notifica. Le risposte dei clienti e i promemoria per sollecitare appariranno qui.</p>}
         </div>
         {notifications.length > 0 && <footer>{notifications.length === 50 && <small>Ultime 50 notifiche</small>}<button type="button" disabled={!unreadCount || marking !== null} onClick={() => markRead()}>{marking === "all" ? "Aggiornamento…" : "Segna tutte come lette"}</button></footer>}
       </section>

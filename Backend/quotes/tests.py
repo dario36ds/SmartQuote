@@ -181,20 +181,20 @@ class QuoteValidationTests(APITestCase):
         data = {
             "customer": self.customer.pk,
             "title": "Manutenzione",
-            "items": [{"description": "Servizio", "quantity": "2.50", "unit_price": "12.50"}],
+            "items": [{"description": "Servizio", "quantity": "2", "unit_price": "12.50"}],
         }
         return self.client.post("/api/quotes/", {**data, **overrides}, format="json")
 
-    def test_fractional_quantities_and_zero_prices_are_valid(self):
+    def test_integer_quantities_and_zero_prices_are_valid(self):
         response = self.create_quote()
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data["total"], "31.25")
+        self.assertEqual(response.data["total"], "25.00")
         response = self.create_quote(items=[{"description": "Omaggio", "quantity": "1", "unit_price": "0"}])
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["total"], "0.00")
 
     def test_invalid_item_values_and_empty_text_are_rejected(self):
-        for field, value in (("description", "  "), ("quantity", "0"), ("quantity", "-1"), ("quantity", "0.001"), ("quantity", "100000000"), ("unit_price", "-1"), ("unit_price", "1.001"), ("unit_price", "100000000")):
+        for field, value in (("description", "  "), ("quantity", "0"), ("quantity", "-1"), ("quantity", "0.001"), ("quantity", "1.5"), ("quantity", "2.50"), ("quantity", "100000000"), ("unit_price", "-1"), ("unit_price", "1.001"), ("unit_price", "100000000")):
             with self.subTest(field=field, value=value):
                 item = {"description": "Servizio", "quantity": "1", "unit_price": "10", field: value}
                 response = self.create_quote(items=[item])

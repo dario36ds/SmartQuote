@@ -15,6 +15,7 @@
 .sq-notification-symbol { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; }
 .sq-notification-symbol-accepted { color: var(--sq-status-accepted); background: var(--sq-status-accepted-bg); }
 .sq-notification-symbol-rejected { color: var(--sq-status-rejected); background: var(--sq-status-rejected-bg); }
+.sq-notification-symbol-reminder { color: var(--sq-primary-dark); background: var(--sq-soft); }
 .sq-notification-text { display: grid; gap: 5px; flex: 1; min-width: 0; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
 .sq-notification-text strong { font-size: 13px; font-weight: 600; }
 .sq-notification-text > span { color: var(--sq-text-secondary); }

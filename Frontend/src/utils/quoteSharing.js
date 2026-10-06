@@ -9,11 +9,13 @@ function whatsappNumber(phone = "") {
   return /^[1-9]\d{6,14}$/.test(digits) ? digits : "";
 }
 
-export function getQuoteShareLinks(quote, customer, publicUrl) {
+export function getQuoteShareLinks(quote, customer, publicUrl, { reminder = false } = {}) {
   const total = Number(quote.total).toLocaleString("it-IT", { style: "currency", currency: "EUR" });
   const message = [
     customer?.name ? `Buongiorno ${customer.name},` : "Buongiorno,",
-    `ti invio il preventivo «${quote.title}», per un totale di ${total}.`,
+    reminder
+      ? `ti ricordo il preventivo «${quote.title}», per un totale di ${total}, sul quale sono in attesa di un tuo riscontro.`
+      : `ti invio il preventivo «${quote.title}», per un totale di ${total}.`,
     "Puoi consultare tutti i dettagli e accettare o rifiutare la proposta qui:",
     publicUrl,
     "Resto a disposizione per qualsiasi domanda.",
@@ -23,7 +25,7 @@ export function getQuoteShareLinks(quote, customer, publicUrl) {
   const encodedEmail = encodeURIComponent(email).replace(/%40/g, "@");
 
   return {
-    email: email ? `mailto:${encodedEmail}?subject=${encodeURIComponent(`Preventivo: ${quote.title}`)}&body=${encodeURIComponent(message)}` : null,
+    email: email ? `mailto:${encodedEmail}?subject=${encodeURIComponent(`${reminder ? "Promemoria preventivo" : "Preventivo"}: ${quote.title}`)}&body=${encodeURIComponent(message)}` : null,
     whatsapp: number ? `https://wa.me/${number}?text=${encodeURIComponent(message)}` : null,
     emailRecipient: email,
     whatsappRecipient: number ? `+${number}` : "",
