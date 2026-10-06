@@ -22,13 +22,6 @@
 .quote-toolbar-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .quote-toolbar-actions .sq-button { padding-inline: 19px; font-size: 14px; }
 .quote-toolbar-actions .sq-button-secondary { background: var(--sq-soft); }
-.quote-view-options { position: relative; }
-.quote-view-options summary { list-style: none; }
-.quote-view-options summary::-webkit-details-marker { display: none; }
-.quote-view-options > div { position: absolute; top: calc(100% + 12px); right: 0; width: 230px; padding: 18px; z-index: 10; background: white; border: 1px solid #e8eaf4; border-radius: 12px; box-shadow: 0 10px 28px #25214614; font-size: 13px; }
-.quote-view-options label { display: flex; align-items: center; gap: 9px; }
-.quote-view-options input { accent-color: var(--sq-primary); }
-.quote-view-options button { color: var(--sq-primary); padding: 10px 0 0; background: transparent; }
 .quote-editor-grid { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(300px, 1fr); align-items: start; gap: 32px; scroll-margin-top: 100px; }
 .quote-editor-grid[hidden] { display: none; }
 .quote-editor-main { display: grid; gap: 28px; min-width: 0; border: 0; margin: 0; padding: 0; }
@@ -194,8 +187,6 @@
 .quote-pagination > span { display: grid; place-items: center; width: 34px; height: 36px; border: 1px solid #3525cd; border-radius: 5px; color: white; background: var(--sq-primary); }
 .quote-pagination .sq-icon-button { background: white; border-radius: 5px; }
 .quote-previous { transform: rotate(180deg); }
-.quote-history-compact td { padding-block: 14px; }
-.quote-history-compact .quote-table-items { gap: 3px; }
 .quote-empty { display: grid; justify-items: center; gap: 8px; padding: 45px 24px; text-align: center; color: var(--sq-muted); }
 .quote-empty > .sq-icon { color: var(--sq-primary); }
 .quote-empty h3 { margin: 8px 0 0; color: var(--sq-text-secondary); font-size: 18px; font-weight: 500; }
@@ -287,7 +278,6 @@ body:has(.quote-preview-dialog[open]) { overflow: hidden; }
   .quote-status-filters button { padding-inline: 12px; font-size: 11px; }
   .quote-toolbar-actions { width: 100%; justify-content: space-between; gap: 8px; }
   .quote-toolbar-actions .sq-button { padding-inline: 10px; min-height: 42px; font-size: 12px; gap: 4px; }
-  .quote-view-options > div { right: auto; left: 0; }
   .quote-editor-grid { gap: 20px; scroll-margin-top: 86px; }
   .quote-editor-main { gap: 20px; }
   .quote-panel { padding: 20px 16px; }

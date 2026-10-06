@@ -91,7 +91,6 @@ export default function QuotesPage() {
   const [sort, setSort] = useState("recent");
   const [page, setPage] = useState(1);
   const [editorOpen, setEditorOpen] = useState(true);
-  const [compactView, setCompactView] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [copyNotice, setCopyNotice] = useState("");
   const formRef = useRef(null);
@@ -443,7 +442,7 @@ export default function QuotesPage() {
           <div className="quote-search-row"><label className="sq-search quote-search"><Icon name="search" size={19} /><input type="search" placeholder="Filtra per titolo, cliente o servizio…" aria-label="Cerca preventivi per titolo, cliente o servizio" value={search} onChange={(event) => updateSearch(event.target.value)} /></label><select id="quote-customer" aria-label="Filtra preventivi per cliente" value={customerId} disabled={customersLoading || Boolean(customersError)} onChange={(event) => { setCustomerId(event.target.value); setPage(1); }}><option value="">Tutti i clienti ({customers.length})</option>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}{customer.company ? ` — ${customer.company}` : ""}</option>)}</select></div>
           <div className="quote-status-filters" role="group" aria-label="Filtra per stato"><button type="button" aria-pressed={!statusFilter} className={!statusFilter ? "is-selected" : ""} onClick={() => { setStatusFilter(""); setPage(1); }}>Tutti</button>{Object.entries(STATUS_LABELS).map(([status, label]) => <button key={status} type="button" aria-pressed={statusFilter === status} className={statusFilter === status ? "is-selected" : ""} onClick={() => { setStatusFilter(status); setPage(1); }}>{label} ({quotes.filter((quote) => quote.status === status).length})</button>)}</div>
         </div>
-        <div className="quote-toolbar-actions"><details className="quote-view-options"><summary className="sq-button sq-button-secondary"><Icon name="filters" size={18} />Opzioni vista</summary><div><label><input type="checkbox" checked={compactView} onChange={(event) => setCompactView(event.target.checked)} />Tabella compatta</label><button type="button" onClick={() => { updateSearch(""); setCustomerId(""); setStatusFilter(""); setSort("recent"); }}>Reimposta filtri</button></div></details><button type="button" className="sq-button sq-button-primary" onClick={() => setEditorOpen((value) => !value)} aria-expanded={editorOpen} aria-controls="quote-editor"><Icon name={editorOpen ? "collapse" : "expand"} size={20} />{editorOpen ? "Comprimi editor" : "Apri editor"}</button></div>
+        <div className="quote-toolbar-actions"><button type="button" className="sq-button sq-button-secondary" onClick={() => { updateSearch(""); setCustomerId(""); setStatusFilter(""); setSort("recent"); }}><Icon name="filters" size={18} />Reimposta filtri</button><button type="button" className="sq-button sq-button-primary" onClick={() => setEditorOpen((value) => !value)} aria-expanded={editorOpen} aria-controls="quote-editor"><Icon name={editorOpen ? "collapse" : "expand"} size={20} />{editorOpen ? "Comprimi editor" : "Apri editor"}</button></div>
       </section>
 
       {loading && <p className="sq-loading-label" role="status">Caricamento preventivi…</p>}
@@ -534,7 +533,7 @@ export default function QuotesPage() {
 
       <section className="quote-history" aria-labelledby="quote-history-heading" aria-busy={loading}>
         <div className="quote-history-heading"><div><h2 id="quote-history-heading">Elenco preventivi emessi</h2><p>Storico preventivi, stati e link pubblici generati</p></div><label htmlFor="quote-sort">Ordinamento: <select id="quote-sort" value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }}><option value="recent">Più recenti ↓</option><option value="total">Importo maggiore ↓</option><option value="title">Titolo A–Z</option></select></label></div>
-        <div className={`quote-history-card ${compactView ? "quote-history-compact" : ""}`}>
+        <div className="quote-history-card">
           {loading && <ListSkeleton label="Caricamento preventivi…" />}
           <div hidden={loading || Boolean(error)} className="quote-table-scroll" tabIndex={0} role="region" aria-label="Tabella preventivi"><table className="quote-table" role="table"><thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">Titolo &amp; commessa</th><th role="columnheader" scope="col">Dettaglio voci</th><th role="columnheader" scope="col">Stato</th><th role="columnheader" scope="col">Totale</th><th role="columnheader" scope="col">Consegna</th><th role="columnheader" scope="col">Link pubblico cliente</th><th role="columnheader" scope="col">Azioni</th></tr></thead><tbody role="rowgroup">
             {visibleQuotes.map((quote) => <tr role="row" key={quote.id} className={editingId === quote.id ? "quote-current-row" : ""}>
