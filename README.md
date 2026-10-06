@@ -103,6 +103,7 @@ cp .env.example .env
 
 - Sostituisci `DJANGO_SECRET_KEY` con una chiave casuale personale: Django richiede un valore non vuoto.
 - Configura `DB_NAME`, `DB_USER` e `DB_PASSWORD` con i dati del database da inizializzare. Mantieni questi valori non vuoti e scegli una password personale.
+- Mantieni `DJANGO_DEBUG=False`: gli statici Django vengono raccolti all'avvio e serviti da Nginx.
 - Mantieni `OLLAMA_MODEL=qwen2.5:14b-instruct` per usare il modello predefinito oppure indica il modello che desideri scaricare. Compose richiede esplicitamente questa variabile non vuota.
 
 Gli altri valori dell’esempio sono già impostati per l’uso sul computer locale. Avvia quindi:
@@ -113,7 +114,7 @@ docker compose up --build
 
 Il solo servizio Compose è **`app`**. L’immagine contiene PostgreSQL 17, Ollama, Django, il frontend compilato servito da Nginx e il processo dei promemoria. Non serve un container separato per inizializzare Ollama: lo script di avvio esegue queste operazioni:
 
-1. Avvia PostgreSQL e Ollama, attende il database e applica le migrazioni Django con `migrate --noinput`.
+1. Avvia PostgreSQL e Ollama, attende il database, applica le migrazioni Django con `migrate --noinput` e raccoglie gli statici con `collectstatic --noinput`.
 2. Attende Ollama, verifica il modello configurato e lo scarica se manca.
 3. Avvia il controllo dei promemoria ogni 60 secondi, l’API Django sulla porta 8000 e Nginx sulla porta 5173.
 
@@ -123,8 +124,10 @@ Il frontend e l’API diventano disponibili dopo la preparazione del modello. Il
 | --- | --- |
 | Applicazione React | http://localhost:5173 |
 | API Django | http://127.0.0.1:8000/api/ |
-| Amministrazione Django | http://127.0.0.1:8000/admin/ |
+| Amministrazione Django | http://localhost:5173/admin/ |
 | PostgreSQL | `127.0.0.1:5432`, oppure la porta esterna scelta con `DB_PORT`. |
+
+Nginx serve `/static/` dalla cartella `/app/Backend/staticfiles/` prodotta da `collectstatic` e inoltra `/admin/` a Django. Con `DJANGO_DEBUG=False`, usa l'indirizzo dell'admin sulla porta **5173** per caricare anche CSS e JavaScript; la porta 8000 espone direttamente Django e non serve gli statici. I file vengono raccolti a ogni avvio nello stesso container, senza volumi o servizi aggiuntivi. Se la raccolta fallisce, l'avvio viene interrotto come per le migrazioni.
 
 Ollama ascolta sulla porta 11434 all’interno del container; Compose non pubblica questa porta sul computer. Le dipendenze di avvio sono gestite dallo script `docker/start.py`, senza altri servizi Compose o `depends_on`.
 
@@ -234,7 +237,7 @@ Gli esempi sensibili nella tabella sono segnaposto da sostituire.
 | Variabile | Descrizione | Esempio |
 | --- | --- | --- |
 | `DJANGO_SECRET_KEY` | Chiave segreta Django, obbligatoria e non vuota. | `change-me` |
-| `DJANGO_DEBUG` | Debug Django; l’esempio abilita lo sviluppo, il default del codice è `False`. | `True` |
+| `DJANGO_DEBUG` | Debug Django; l'esempio e il default del codice sono `False`, come nell'avvio Docker consigliato. | `False` |
 | `DJANGO_ALLOWED_HOSTS` | Host consentiti, separati da virgole, senza protocollo o porta. | `localhost,127.0.0.1` |
 | `CORS_ALLOWED_ORIGINS` | Origini frontend consentite, complete di protocollo e porta. | `http://localhost:5173,http://127.0.0.1:5173` |
 | `DB_NAME` | Nome del database PostgreSQL. | `smartquote` |
