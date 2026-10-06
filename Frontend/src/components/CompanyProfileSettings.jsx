@@ -19,10 +19,11 @@ export default function CompanyProfileSettings({ busy = false, onSavingChange })
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [readingLogo, setReadingLogo] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [attempt, setAttempt] = useState(0);
-  const changed = profile && fields.some(({ name }) => form[name].trim() !== profile[name]);
+  const changed = profile && (form.logo !== profile.logo || fields.some(({ name }) => form[name].trim() !== profile[name]));
 
   useEffect(() => {
     let active = true;
@@ -32,21 +33,57 @@ export default function CompanyProfileSettings({ busy = false, onSavingChange })
     return () => { active = false; };
   }, [token, attempt]);
 
+  async function selectLogo(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || saving || busy || readingLogo) return;
+    setFeedback(null);
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      setFeedback({ success: false, message: "Carica un logo PNG, JPG o WebP." });
+      return;
+    }
+    if (file.size > 512 * 1024) {
+      setFeedback({ success: false, message: "Il logo non può superare 512 KB." });
+      return;
+    }
+    setReadingLogo(true);
+    onSavingChange(true);
+    try {
+      const logo = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("Impossibile leggere il file selezionato."));
+        reader.readAsDataURL(file);
+      });
+      const image = new Image();
+      image.src = logo;
+      await image.decode();
+      if (image.width * image.height > 4_000_000) throw new Error("Il logo non può superare 4 milioni di pixel.");
+      setForm((current) => ({ ...current, logo }));
+    } catch (error) {
+      setFeedback({ success: false, message: error.name === "EncodingError" ? "Il file del logo non è un’immagine valida." : error.message });
+    } finally {
+      setReadingLogo(false);
+      onSavingChange(false);
+    }
+  }
+
   async function save(event) {
     event.preventDefault();
-    if (saving || busy || !profile || !changed) return;
+    if (saving || busy || readingLogo || !profile || !changed) return;
     setSaving(true);
     onSavingChange(true);
     setFeedback(null);
     try {
       const body = Object.fromEntries(fields.map(({ name }) => [name, form[name].trim()]));
+      if (form.logo !== profile.logo) body.logo = form.logo;
       const data = await apiRequest("/auth/company-profile/", { method: "PATCH", token, body });
       setProfile(data);
       setForm(data);
       setFeedback({ success: true, message: "Profilo aziendale aggiornato correttamente." });
     } catch (error) {
       const messages = Object.entries(error.data || {}).flatMap(([name, values]) => {
-        const label = fields.find((field) => field.name === name)?.label;
+        const label = name === "logo" ? "Logo" : fields.find((field) => field.name === name)?.label;
         return [values].flat().filter((value) => typeof value === "string").map((value) => label ? `${label}: ${value}` : value);
       });
       setFeedback({ success: false, message: messages.join(" ") || error.message });
@@ -64,9 +101,19 @@ export default function CompanyProfileSettings({ busy = false, onSavingChange })
     {loadError ? <>
       <p className="settings-feedback settings-error" role="alert">Impossibile caricare il profilo aziendale: {loadError}</p>
       <button type="button" className="sq-button sq-button-secondary" disabled={busy} onClick={() => { setLoadError(""); setProfile(null); setForm(null); setAttempt((value) => value + 1); }}><Icon name="refresh" />Riprova</button>
-    </> : !profile ? <div role="status"><span className="sq-visually-hidden">Caricamento profilo aziendale…</span><Skeleton height={120} /></div> : <form onSubmit={save} aria-busy={saving}>
-      <fieldset disabled={saving || busy}>
+    </> : !profile ? <div role="status"><span className="sq-visually-hidden">Caricamento profilo aziendale…</span><Skeleton height={120} /></div> : <form onSubmit={save} aria-busy={saving || readingLogo}>
+      <fieldset disabled={saving || busy || readingLogo}>
         <legend className="sq-visually-hidden">Modifica profilo aziendale</legend>
+        <div className="settings-company-logo">
+          <div className="settings-logo-preview">{form.logo ? <img src={form.logo} alt="Anteprima del logo aziendale" width="96" height="96" /> : <Icon name="store" size={36} />}</div>
+          <div className="settings-field">
+            <label htmlFor="settings-company-logo">Logo aziendale</label>
+            <input id="settings-company-logo" type="file" accept="image/png,image/jpeg,image/webp" onChange={selectLogo} aria-describedby="settings-logo-hint" />
+            <p id="settings-logo-hint" className="settings-hint">PNG, JPG o WebP, massimo 512 KB e 4 milioni di pixel. Il logo viene ottimizzato al salvataggio.</p>
+            {readingLogo && <p className="settings-hint" role="status">Caricamento logo…</p>}
+            {form.logo && <button type="button" className="sq-button sq-button-secondary" onClick={() => { setForm((current) => ({ ...current, logo: "" })); setFeedback(null); }}><Icon name="trash" />Rimuovi logo</button>}
+          </div>
+        </div>
         <div className="settings-company-fields">
           {fields.map(({ name, label, wide, ...input }) => <div key={name} className={`settings-field${wide ? " settings-field-wide" : ""}`}>
             <label htmlFor={`settings-company-${name}`}>{label}</label>

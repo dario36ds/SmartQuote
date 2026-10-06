@@ -6,9 +6,11 @@ from rest_framework import serializers
 
 from config.validators import validate_contact_email
 from .models import CompanyProfile
+from .logo import MAX_LOGO_LENGTH, normalize_logo
 
 
 class CompanyProfileSerializer(serializers.ModelSerializer):
+    logo = serializers.CharField(max_length=MAX_LOGO_LENGTH, required=False, allow_blank=True)
     website = serializers.URLField(
         max_length=200, required=False, allow_blank=True,
         validators=[URLValidator(schemes=["http", "https"])],
@@ -17,7 +19,10 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CompanyProfile
-        fields = ("name", "address", "vat_number", "phone", "website")
+        fields = ("name", "address", "vat_number", "phone", "website", "logo")
+
+    def validate_logo(self, value):
+        return normalize_logo(value)
 
 
 class RegisterSerializer(serializers.ModelSerializer):

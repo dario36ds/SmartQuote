@@ -11,6 +11,7 @@ class CompanyProfile(models.Model):
         related_name="company_profile",
     )
     name = models.CharField(max_length=150, blank=True)
+    logo = models.TextField(blank=True)
     address = models.CharField(max_length=500, blank=True)
     vat_number = models.CharField(max_length=32, blank=True)
     phone = models.CharField(max_length=30, blank=True, validators=[validate_phone])
