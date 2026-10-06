@@ -21,7 +21,6 @@
 .quote-status-filters button.is-selected { color: var(--sq-primary-dark); background: white; }
 .quote-toolbar-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .quote-toolbar-actions .sq-button { padding-inline: 19px; font-size: 14px; }
-.quote-toolbar-actions .sq-button-secondary { background: var(--sq-soft); }
 .quote-editor-grid { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(300px, 1fr); align-items: start; gap: 32px; scroll-margin-top: 100px; }
 .quote-editor-grid[hidden] { display: none; }
 .quote-editor-main { display: grid; gap: 28px; min-width: 0; border: 0; margin: 0; padding: 0; }
