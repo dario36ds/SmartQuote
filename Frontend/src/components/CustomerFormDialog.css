@@ -11,6 +11,8 @@ body:has(.customer-dialog[open]) { overflow: hidden; }
 .customer-form-fields input, .customer-form-fields textarea { display: block; width: 100%; min-width: 0; min-height: 50px; margin-top: 7px; padding: 12px 14px; border: 1px solid var(--sq-border); border-radius: 9px; background: var(--sq-soft); color: var(--sq-ink); font-size: 14px; font-weight: 400; }
 .customer-form-fields input::placeholder, .customer-form-fields textarea::placeholder { color: var(--sq-muted); opacity: 1; }
 .customer-form-fields textarea { resize: vertical; }
+.customer-field-hint { display: block; margin-top: 6px; color: var(--sq-text-secondary); font-size: 12px; line-height: 1.6; }
+.customer-form-fields input[aria-invalid="true"] { border-color: var(--sq-status-rejected); }
 .customer-field-full { grid-column: 1 / -1; }
 .customer-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #eef0f8; font-size: 14px; }
 .customer-dialog-error { margin-top: 16px !important; padding: 14px 18px; border-radius: 10px; color: var(--sq-status-rejected); background: var(--sq-status-rejected-bg); font-size: 14px; }

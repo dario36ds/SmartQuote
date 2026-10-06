@@ -37,6 +37,27 @@ class AccountSettingsTests(APITestCase):
         self.assertEqual(self.client.patch("/api/auth/me/", {}, format="json").status_code, 401)
         self.assertEqual(self.change_password().status_code, 401)
 
+    def test_email_format_is_validated_for_registration_and_settings(self):
+        for email in ("invalid", "mario@localhost", "mario@@example.com", "mario rossi@example.com"):
+            with self.subTest(email=email):
+                for path, method, data in (
+                    ("/api/auth/register/", self.client.post, {"username": "new-user", "password": self.new_password}),
+                    ("/api/auth/me/", self.client.patch, {"current_password": self.current_password}),
+                ):
+                    response = method(path, {**data, "email": email}, format="json")
+                    self.assertEqual(response.status_code, 400)
+                    self.assertIn("email", response.data)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "mario@example.com")
+        self.assertFalse(User.objects.filter(username="new-user").exists())
+
+    def test_registration_email_stays_optional(self):
+        response = self.client.post("/api/auth/register/", {
+            "username": "new-user", "password": self.new_password,
+        }, format="json")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["user"]["email"], "")
+
     def test_email_update_is_persisted_and_scoped_to_current_user(self):
         response = self.client.patch("/api/auth/me/", {
             "email": " nuovo@example.com ",

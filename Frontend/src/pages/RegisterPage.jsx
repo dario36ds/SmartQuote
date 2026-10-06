@@ -4,6 +4,7 @@ import { Link } from "react-router";
 
 import { apiRequest } from "../api";
 import PasswordInput from "../components/PasswordInput";
+import ValidatedInput from "../components/ValidatedInput";
 import "./AuthPage.css";
 
 export default function RegisterPage() {
@@ -55,10 +56,11 @@ export default function RegisterPage() {
           <div>
             <label htmlFor="username">Username</label>
 
-            <input
+            <ValidatedInput
               id="username"
               name="username"
               autoComplete="username"
+              maxLength={150}
               disabled={loading || success}
               value={username}
               onChange={(event) => setUsername(event.target.value)}
@@ -69,11 +71,12 @@ export default function RegisterPage() {
           <div>
             <label htmlFor="email">Email (facoltativa)</label>
 
-            <input
+            <ValidatedInput
               id="email"
               name="email"
               type="email"
               autoComplete="email"
+              maxLength={254}
               disabled={loading || success}
               value={email}
               onChange={(event) => setEmail(event.target.value)}

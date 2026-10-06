@@ -3,6 +3,7 @@ import { useState } from "react";
 import AuthenticatedLayout from "../components/AuthenticatedLayout";
 import Icon from "../components/Icon";
 import PasswordInput from "../components/PasswordInput";
+import ValidatedInput from "../components/ValidatedInput";
 import { useAuth } from "../context/AuthContext";
 import "./SettingsPage.css";
 
@@ -85,7 +86,7 @@ export default function SettingsPage() {
                 <legend className="sq-visually-hidden">Modifica email</legend>
                 <div className="settings-field">
                   <label htmlFor="settings-email">Email</label>
-                  <input id="settings-email" name="email" type="email" autoComplete="email" maxLength={254} value={email} onChange={(event) => { setEmail(event.target.value); setEmailFeedback(null); }} required />
+                  <ValidatedInput id="settings-email" name="email" type="email" autoComplete="email" maxLength={254} value={email} onChange={(event) => { setEmail(event.target.value); setEmailFeedback(null); }} required />
                 </div>
                 <div className="settings-field">
                   <label htmlFor="settings-email-password">Password attuale</label>

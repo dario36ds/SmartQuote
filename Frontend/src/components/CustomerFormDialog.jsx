@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import Icon from "./Icon";
+import ValidatedInput from "./ValidatedInput";
 import "./CustomerFormDialog.css";
 
 export default function CustomerFormDialog({
@@ -19,14 +20,13 @@ export default function CustomerFormDialog({
   idPrefix = "customer",
 }) {
   const dialogRef = useRef(null);
-  const nameRef = useRef(null);
   const submitting = useRef(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (open && !dialog.open) {
       dialog.showModal();
-      nameRef.current.focus();
+      dialog.querySelector('input[name="name"]').focus();
     } else if (!open && dialog.open) {
       dialog.close();
     }
@@ -54,11 +54,11 @@ export default function CustomerFormDialog({
         <button type="button" className="sq-icon-button" onClick={cancel} disabled={busy} aria-label="Chiudi modulo cliente"><Icon name="close" /></button>
       </div>
       <form onSubmit={submit} aria-busy={busy}>
-        <fieldset disabled={busy} className="customer-form-fields"><legend className="sq-visually-hidden">Dati del cliente</legend>
-          <label className="customer-field-full" htmlFor={`${idPrefix}-name`}>Nome e cognome <span>*</span><input ref={nameRef} id={`${idPrefix}-name`} name="name" value={form.name} onChange={onChange} maxLength={150} autoComplete="name" placeholder="Es. Mario Rossi" required /></label>
-          <label className="customer-field-full" htmlFor={`${idPrefix}-company`}>Azienda<input id={`${idPrefix}-company`} name="company" value={form.company} onChange={onChange} maxLength={150} autoComplete="organization" placeholder="Ragione sociale (facoltativa)" /></label>
-          <label htmlFor={`${idPrefix}-email`}>Email<input id={`${idPrefix}-email`} name="email" type="email" value={form.email} onChange={onChange} maxLength={254} autoComplete="email" placeholder="nome@azienda.it" /></label>
-          <label htmlFor={`${idPrefix}-phone`}>Telefono<input id={`${idPrefix}-phone`} name="phone" type="tel" value={form.phone} onChange={onChange} maxLength={50} autoComplete="tel" placeholder="+39 000 000 0000" /></label>
+        <fieldset key={String(open)} disabled={busy} className="customer-form-fields"><legend className="sq-visually-hidden">Dati del cliente</legend>
+          <label className="customer-field-full" htmlFor={`${idPrefix}-name`}>Nome e cognome <span>*</span><ValidatedInput id={`${idPrefix}-name`} name="name" value={form.name} onChange={onChange} maxLength={150} autoComplete="name" placeholder="Es. Mario Rossi" required /></label>
+          <label className="customer-field-full" htmlFor={`${idPrefix}-company`}>Azienda<ValidatedInput id={`${idPrefix}-company`} name="company" value={form.company} onChange={onChange} maxLength={150} autoComplete="organization" placeholder="Ragione sociale (facoltativa)" /></label>
+          <label htmlFor={`${idPrefix}-email`}>Email<ValidatedInput id={`${idPrefix}-email`} name="email" type="email" value={form.email} onChange={onChange} maxLength={254} autoComplete="email" placeholder="nome@azienda.it" /></label>
+          <label htmlFor={`${idPrefix}-phone`}>Telefono<ValidatedInput id={`${idPrefix}-phone`} name="phone" type="tel" value={form.phone} onChange={onChange} maxLength={50} autoComplete="tel" placeholder="+39 333 123 4567" aria-describedby={`${idPrefix}-phone-hint`} /><small id={`${idPrefix}-phone-hint`} className="customer-field-hint">Da 7 a 15 cifre; prefisso internazionale facoltativo.</small></label>
           <label className="customer-field-full" htmlFor={`${idPrefix}-address`}>Indirizzo<textarea id={`${idPrefix}-address`} name="address" value={form.address} onChange={onChange} autoComplete="street-address" rows={2} placeholder="Via, numero civico, città" /></label>
         </fieldset>
         {error && <p className="customer-dialog-error" role="alert">{error}</p>}

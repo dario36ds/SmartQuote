@@ -3,6 +3,8 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
+from config.validators import validate_contact_email
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
@@ -18,6 +20,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             "email",
             "password",
         )
+        extra_kwargs = {
+            "email": {
+                "validators": [validate_contact_email],
+                "error_messages": {"invalid": "Inserisci un indirizzo email valido, ad esempio nome@azienda.it."},
+            },
+        }
 
     def create(self, validated_data):
         return User.objects.create_user(
@@ -47,7 +55,10 @@ class ConfirmPasswordSerializer(serializers.Serializer):
 
 
 class ChangeEmailSerializer(ConfirmPasswordSerializer):
-    email = serializers.EmailField(max_length=254)
+    email = serializers.EmailField(
+        max_length=254, validators=[validate_contact_email],
+        error_messages={"invalid": "Inserisci un indirizzo email valido, ad esempio nome@azienda.it."},
+    )
 
 
 class ChangePasswordSerializer(ConfirmPasswordSerializer):

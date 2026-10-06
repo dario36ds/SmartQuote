@@ -9,6 +9,7 @@ import Skeleton from "../components/Skeleton";
 import { FormSkeleton, ListSkeleton, QuoteItemsSkeleton, QuoteSummarySkeleton, SkeletonLines } from "../components/LoadingSkeletons";
 import Icon from "../components/Icon";
 import QuoteShareActions from "../components/QuoteShareActions";
+import ValidatedInput from "../components/ValidatedInput";
 import { useAuth } from "../context/AuthContext";
 import "./QuotesPage.css";
 
@@ -440,7 +441,7 @@ export default function QuotesPage() {
             <PanelHeading step="1" title="Dati generali del preventivo" subtitle="Intestazione, cliente e tempistiche">{dataLoading ? <Skeleton width={70} height={24} /> : <StatusBadge status={savedQuote?.status || "DRAFT"} />}</PanelHeading>
             {dataLoading ? <FormSkeleton /> : <div className="quote-form-grid">
               <div className="quote-customer-field"><div className="quote-label-row"><label htmlFor="new-quote-customer">Cliente del preventivo *</label><button type="button" className="quote-new-customer" disabled={editorDisabled || isPublished} onClick={handleNewCustomer}><Icon name="plus" size={13} />Nuovo cliente</button></div><select id="new-quote-customer" name="customer" value={quoteForm.customer} onChange={handleQuoteChange} required><option value="">Seleziona un cliente</option>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}{customer.company ? ` (${customer.company})` : ""}</option>)}</select></div>
-              <label htmlFor="new-quote-title">Titolo del preventivo *<input id="new-quote-title" name="title" value={quoteForm.title} onChange={handleQuoteChange} maxLength={200} placeholder="Es. Manutenzione e riparazione" required /></label>
+              <label htmlFor="new-quote-title">Titolo del preventivo *<ValidatedInput id="new-quote-title" name="title" value={quoteForm.title} onChange={handleQuoteChange} maxLength={200} placeholder="Es. Manutenzione e riparazione" required /></label>
               <label htmlFor="new-quote-delivery">Tempo di consegna stimato<span className="quote-input-icon"><Icon name="calendar" size={18} /><input id="new-quote-delivery" name="delivery_time" value={quoteForm.delivery_time} onChange={handleQuoteChange} maxLength={150} placeholder="Es. 5 giorni lavorativi" /></span></label>
               <div className="quote-readonly-field"><span>Stato del preventivo</span><div><Icon name="check" size={18} />{STATUS_LABELS[savedQuote?.status || "DRAFT"]}{isEditing && <small>#{editingId}</small>}</div></div>
               <label className="quote-field-full" htmlFor="quote-description">Descrizione dell’intervento / Note per il cliente (facoltativo)<textarea id="quote-description" name="description" rows={3} value={quoteForm.description} onChange={handleQuoteChange} placeholder="Descrivi i servizi e le informazioni da includere nel preventivo pubblico…" /></label>
@@ -453,20 +454,21 @@ export default function QuotesPage() {
               <div className="quote-items-head" aria-hidden="true"><span>Descrizione servizio / articolo</span><span>Quantità</span><span>Prezzo unit.</span><span>Totale voce</span><span /></div>
               <div className="quote-items">
                 {items.map((item, index) => <div className="quote-item" key={item.key}>
-                  <label className="quote-item-description" htmlFor={`item-description-${item.key}`}><span className="sq-visually-hidden">Servizio {index + 1}</span><input id={`item-description-${item.key}`} name="description" value={item.description} onChange={(event) => handleItemChange(item.key, event)} maxLength={255} placeholder="Descrizione servizio o articolo" required /><small>Voce {index + 1}</small></label>
-                  <label htmlFor={`item-quantity-${item.key}`}><span className="sq-visually-hidden">Quantità voce {index + 1}</span><input
+                  <label className="quote-item-description" htmlFor={`item-description-${item.key}`}><span className="sq-visually-hidden">Servizio {index + 1}</span><ValidatedInput id={`item-description-${item.key}`} name="description" value={item.description} onChange={(event) => handleItemChange(item.key, event)} maxLength={255} placeholder="Descrizione servizio o articolo" required /><small>Voce {index + 1}</small></label>
+                  <label htmlFor={`item-quantity-${item.key}`}><span className="sq-visually-hidden">Quantità voce {index + 1}</span><ValidatedInput
     id={`item-quantity-${item.key}`}
     name="quantity"
     type="number"
     inputMode="decimal"
-    min="1"
-    step="1"
+    min="0.01"
+    max="99999999.99"
+    step="0.01"
     value={item.quantity}
     onChange={(event) => handleItemChange(item.key, event)}
     placeholder="1"
     required
   /></label>
-                  <label className="quote-unit-price" htmlFor={`item-price-${item.key}`}><span className="sq-visually-hidden">Prezzo unitario voce {index + 1}</span><span aria-hidden="true">€</span><input id={`item-price-${item.key}`} name="unit_price" type="number" min="0" step="0.01" value={item.unit_price} onChange={(event) => handleItemChange(item.key, event)} placeholder="0,00" required /></label>
+                  <label className="quote-unit-price" htmlFor={`item-price-${item.key}`}><span className="sq-visually-hidden">Prezzo unitario voce {index + 1}</span><span aria-hidden="true">€</span><ValidatedInput id={`item-price-${item.key}`} name="unit_price" type="number" inputMode="decimal" min="0" max="99999999.99" step="0.01" value={item.unit_price} onChange={(event) => handleItemChange(item.key, event)} placeholder="0,00" required /></label>
                   <output className="quote-item-total" aria-label={`Totale voce ${index + 1}`}>{amount(lineTotal(item))}</output>
                   <button type="button" className="quote-remove-item" disabled={items.length === 1} onClick={() => handleRemoveItem(item.key)} aria-label={`Rimuovi voce ${index + 1}`} title="Rimuovi voce"><Icon name="trash" size={18} /></button>
                 </div>)}

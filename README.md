@@ -6,6 +6,7 @@ SmartQuote è un’applicazione per creare e gestire preventivi commerciali, org
 
 - **Account:** registrazione, accesso e logout con autenticazione tramite token; pagina Impostazioni per cambiare email e password confermando la password attuale, con controlli sulla robustezza della nuova password e rinnovo del token; pulsante per mostrare o nascondere la password.
 - **Clienti:** creazione, modifica ed eliminazione dell’anagrafica, ricerca, filtri, ordinamento e paginazione, con riepiloghi dei preventivi associati.
+- **Validazione dei campi:** email con dominio completo, telefoni nazionali e internazionali con 7–15 cifre e prefisso facoltativo, controlli sui campi obbligatori e sulle lunghezze. I moduli mostrano gli errori accanto ai campi; le API ripetono i controlli. Quantità e prezzi dei preventivi ammettono due decimali, rispettivamente con minimo 0,01 e 0; vengono controllati anche i limiti dei valori e dei totali.
 - **Preventivi:** editor con cliente, titolo, descrizione, tempi di consegna e voci di costo; creazione di un nuovo cliente direttamente nell’editor, con selezione automatica e mantenimento dei dati già inseriti; calcolo dei totali, salvataggio in bozza e anteprima.
 - **Testi AI:** generazione con tono professionale, cordiale, sintetico o commerciale. La bozza viene salvata prima della generazione; il testo può essere rivisto e deve essere salvato per conservarne le modifiche. In caso di errore, la descrizione precedente rimane disponibile.
 - **Condivisione:** pubblicazione di un link cliente, copia del link e preparazione di messaggi per email o WhatsApp. L’invio viene confermato nell’app scelta.
@@ -192,6 +193,7 @@ Controlli frontend, dalla cartella `Frontend`:
 
 ```bash
 npm run lint
+npm test
 npm run build
 ```
 

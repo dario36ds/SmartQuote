@@ -1,7 +1,11 @@
+from decimal import Decimal
+
 from django.db import transaction
 from rest_framework import serializers
 
 from .models import Quote, QuoteItem
+
+MAX_TOTAL = Decimal("9999999999.99")
 
 
 class QuoteItemSerializer(serializers.ModelSerializer):
@@ -41,6 +45,17 @@ class QuoteItemSerializer(serializers.ModelSerializer):
             )
 
         return value
+
+    def validate(self, attrs):
+        missing = {field: "Compila questo campo." for field in ("description", "unit_price") if field not in attrs}
+        if missing:
+            raise serializers.ValidationError(missing)
+        attrs.setdefault("quantity", Decimal("1"))
+        if attrs["quantity"] * attrs["unit_price"] > MAX_TOTAL:
+            raise serializers.ValidationError({
+                "unit_price": "Il totale della voce non può superare 9.999.999.999,99 €.",
+            })
+        return attrs
 
 
 class QuoteSerializer(serializers.ModelSerializer):
@@ -100,6 +115,11 @@ class QuoteSerializer(serializers.ModelSerializer):
         if not items:
             raise serializers.ValidationError(
                 "Il preventivo deve contenere almeno una voce."
+            )
+
+        if sum(item["quantity"] * item["unit_price"] for item in items) > MAX_TOTAL:
+            raise serializers.ValidationError(
+                "Il totale del preventivo non può superare 9.999.999.999,99 €."
             )
 
         return items

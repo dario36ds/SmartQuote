@@ -168,6 +168,61 @@ class QuoteNotificationTests(APITestCase):
         self.assertEqual(rejected.response_notification.user_id, self.other.pk)
 
 
+class QuoteValidationTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner = get_user_model().objects.create_user(username="validation-owner")
+        cls.customer = Customer.objects.create(user=cls.owner, name="Mario Rossi")
+
+    def setUp(self):
+        self.client.force_authenticate(self.owner)
+
+    def create_quote(self, **overrides):
+        data = {
+            "customer": self.customer.pk,
+            "title": "Manutenzione",
+            "items": [{"description": "Servizio", "quantity": "2.50", "unit_price": "12.50"}],
+        }
+        return self.client.post("/api/quotes/", {**data, **overrides}, format="json")
+
+    def test_fractional_quantities_and_zero_prices_are_valid(self):
+        response = self.create_quote()
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["total"], "31.25")
+        response = self.create_quote(items=[{"description": "Omaggio", "quantity": "1", "unit_price": "0"}])
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["total"], "0.00")
+
+    def test_invalid_item_values_and_empty_text_are_rejected(self):
+        for field, value in (("description", "  "), ("quantity", "0"), ("quantity", "-1"), ("quantity", "0.001"), ("quantity", "100000000"), ("unit_price", "-1"), ("unit_price", "1.001"), ("unit_price", "100000000")):
+            with self.subTest(field=field, value=value):
+                item = {"description": "Servizio", "quantity": "1", "unit_price": "10", field: value}
+                response = self.create_quote(items=[item])
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(field, response.data["items"][0])
+        self.assertEqual(self.create_quote(title="  ").status_code, 400)
+        self.assertFalse(Quote.objects.exists())
+
+    def test_excessive_line_and_quote_totals_are_rejected_before_saving(self):
+        response = self.create_quote(items=[{"description": "Servizio", "quantity": "1000000", "unit_price": "1000000"}])
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("unit_price", response.data["items"][0])
+        response = self.create_quote(items=[{"description": "Servizio", "quantity": "1000000", "unit_price": "6000"}] * 2)
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(Quote.objects.exists())
+
+    def test_incomplete_items_on_partial_edit_keep_the_previous_quote(self):
+        original = self.create_quote()
+        path = f"/api/quotes/{original.data['id']}/"
+        response = self.client.patch(path, {"title": "Modificato", "items": [{"description": "Incompleto"}]}, format="json")
+        self.assertEqual(response.status_code, 400)
+        quote = Quote.objects.get(pk=original.data["id"])
+        self.assertEqual(quote.title, "Manutenzione")
+        self.assertEqual(quote.items.count(), 1)
+        self.assertEqual(quote.items.get().description, "Servizio")
+        self.assertEqual(self.client.patch(path, {"title": "Modificato"}, format="json").status_code, 200)
+
+
 class ConcurrentQuoteResponseTests(TransactionTestCase):
     @skipUnlessDBFeature("has_select_for_update")
     def test_simultaneous_opposite_responses_record_one_decision(self):

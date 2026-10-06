@@ -1,0 +1,2 @@
+.sq-field-error { display: block; margin-top: 6px; color: var(--sq-status-rejected); font-size: 12px; font-weight: 400; line-height: 1.6; }
+input[aria-invalid="true"] { border-color: var(--sq-status-rejected); }
