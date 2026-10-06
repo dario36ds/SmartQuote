@@ -475,7 +475,7 @@ export default function QuotesPage() {
               <div className="quote-items-head" aria-hidden="true"><span>Descrizione servizio / articolo</span><span>Quantità</span><span>Prezzo unit.</span><span>Totale voce</span><span /></div>
               <div className="quote-items">
                 {items.map((item, index) => <div className="quote-item" key={item.key}>
-                  <label className="quote-item-description" htmlFor={`item-description-${item.key}`}><span className="sq-visually-hidden">Servizio {index + 1}</span><ValidatedInput id={`item-description-${item.key}`} name="description" value={item.description} onChange={(event) => handleItemChange(item.key, event)} maxLength={255} placeholder="Descrizione servizio o articolo" required /><small>Voce {index + 1}</small></label>
+                  <label className="quote-item-description" htmlFor={`item-description-${item.key}`}><span className="sq-visually-hidden">Servizio {index + 1}</span><small className="quote-item-label">Voce {index + 1}</small><ValidatedInput id={`item-description-${item.key}`} name="description" value={item.description} onChange={(event) => handleItemChange(item.key, event)} maxLength={255} placeholder="Descrizione servizio o articolo" required /></label>
                   <label htmlFor={`item-quantity-${item.key}`}><span className="sq-visually-hidden">Quantità voce {index + 1}</span><ValidatedInput
   id={`item-quantity-${item.key}`}
   name="quantity"

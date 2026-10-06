@@ -64,6 +64,7 @@
 .quote-item input { display: block; width: 100%; min-width: 0; padding: 13px 8px; border: 0; border-radius: 9px; background: white; color: #4c475b; font-size: 14px; text-align: center; }
 .quote-item-description input { text-align: left; padding-inline: 14px; }
 .quote-item-description small { display: block; margin: 7px 4px 0; color: var(--sq-muted); font-size: 12px; }
+.quote-item-description .quote-item-label { margin: 0 4px 7px; line-height: 18px; }
 .quote-item .sq-field-error { color: var(--sq-status-rejected); }
 .quote-item input[aria-invalid="true"], .quote-form-grid input[aria-invalid="true"] { box-shadow: inset 0 0 0 1px var(--sq-status-rejected); }
 .quote-unit-price { display: flex; align-items: center; padding-left: 9px; background: white; border-radius: 9px; }
@@ -72,6 +73,9 @@
 .quote-item-total { display: flex; align-items: center; justify-content: flex-end; min-height: 47px; font-size: 16px; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
 .quote-remove-item { display: inline-flex; align-items: center; justify-content: center; min-height: 47px; padding: 4px 0; color: #868091; background: transparent; }
 .quote-remove-item:hover { color: #a32c28; }
+@media (min-width: 768px) {
+  .quote-item > label:not(.quote-item-description), .quote-item-total, .quote-remove-item { margin-top: 25px; }
+}
 .quote-add-item { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; min-height: 50px; margin-top: 24px; padding: 12px; border-radius: 10px; background: var(--sq-soft); color: var(--sq-primary-dark); font-size: 15px; }
 .quote-add-item:hover { background: #e3e8ff; }
 .quote-ai-panel { background: linear-gradient(120deg, #f0f4ff, #f5f3ff); }
