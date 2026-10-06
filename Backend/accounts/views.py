@@ -1,11 +1,18 @@
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+from django.db import transaction
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import (
+    ChangeEmailSerializer,
+    ChangePasswordSerializer,
+    RegisterSerializer,
+    UserSerializer,
+)
 
 
 class RegisterView(APIView):
@@ -79,3 +86,25 @@ class MeView(APIView):
         return Response(
             UserSerializer(request.user).data
         )
+
+    @transaction.atomic
+    def patch(self, request):
+        user = User.objects.select_for_update().get(pk=request.user.pk)
+        serializer = ChangeEmailSerializer(data=request.data, context={"user": user})
+        serializer.is_valid(raise_exception=True)
+        user.email = serializer.validated_data["email"]
+        user.save(update_fields=["email"])
+        return Response(UserSerializer(user).data)
+
+
+class ChangePasswordView(APIView):
+    @transaction.atomic
+    def post(self, request):
+        user = User.objects.select_for_update().get(pk=request.user.pk)
+        serializer = ChangePasswordSerializer(data=request.data, context={"user": user})
+        serializer.is_valid(raise_exception=True)
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        Token.objects.filter(user=user).delete()
+        token = Token.objects.create(user=user)
+        return Response({"token": token.key, "user": UserSerializer(user).data})

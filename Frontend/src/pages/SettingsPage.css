@@ -1,0 +1,40 @@
+.settings-page { max-width: 1200px; margin-inline: auto; }
+.settings-heading { margin-bottom: 24px; }
+.settings-heading h1 { font-size: 36px; font-weight: 600; letter-spacing: -1.2px; }
+.settings-heading p { margin-top: 8px; color: var(--sq-text-secondary); }
+.settings-account-summary { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding: 20px 24px; background: #fff; border: 1px solid var(--sq-border); border-radius: 14px; }
+.settings-account-summary > div { min-width: 0; overflow-wrap: anywhere; }
+.settings-account-summary p { margin-top: 4px; color: var(--sq-text-secondary); font-size: 14px; }
+.settings-section-icon { display: grid; place-items: center; flex-shrink: 0; width: 46px; height: 46px; border-radius: 12px; color: var(--sq-primary); background: var(--sq-soft); }
+.settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 24px; }
+.settings-card { min-width: 0; padding: 28px; border: 1px solid var(--sq-border); border-radius: 16px; background: #fff; box-shadow: 0 3px 12px #17233b03; }
+.settings-card-heading { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 26px; }
+.settings-card h2 { font-size: 20px; font-weight: 600; letter-spacing: -.4px; }
+.settings-card-heading p { margin-top: 6px; font-size: 14px; color: var(--sq-text-secondary); }
+.settings-card fieldset { display: grid; gap: 18px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.settings-field { display: grid; gap: 7px; min-width: 0; }
+.settings-field label { font-size: 14px; font-weight: 600; }
+.settings-field input { width: 100%; min-width: 0; min-height: 50px; padding: 12px 14px; border: 1px solid var(--sq-border); border-radius: 9px; color: var(--sq-ink); background: var(--sq-bg); }
+.settings-card .auth-password-field { position: relative; }
+.settings-card .auth-password-field input { padding-right: 54px; }
+.settings-card .auth-password-toggle { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 7px; color: var(--sq-muted); background: transparent; }
+.settings-card .auth-password-toggle:hover { background: var(--sq-soft); color: var(--sq-primary); }
+.settings-hint { color: var(--sq-text-secondary); font-size: 13px; line-height: 1.7; }
+.settings-feedback { padding: 12px 14px; border-radius: 9px; font-size: 14px; overflow-wrap: anywhere; }
+.settings-success { color: var(--sq-status-accepted); background: var(--sq-status-accepted-bg); }
+.settings-error { color: var(--sq-status-rejected); background: var(--sq-status-rejected-bg); }
+.settings-card .sq-button { justify-self: start; }
+.settings-card fieldset:disabled input { opacity: .6; }
+
+@media (max-width: 1023px) {
+  .settings-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 767px) {
+  .settings-heading h1 { font-size: 28px; }
+  .settings-heading p { font-size: 14px; }
+  .settings-card { padding: 20px; }
+  .settings-account-summary { padding: 16px; }
+  .settings-grid { gap: 16px; }
+  .settings-card .sq-button { width: 100%; }
+  .settings-workspace .sq-topbar-title { font-size: 12px; }
+}

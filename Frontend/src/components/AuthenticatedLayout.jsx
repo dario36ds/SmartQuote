@@ -10,7 +10,7 @@ export default function AuthenticatedLayout({ children, variant, search, onSearc
     await logout();
   }
 
-  if (["customers", "quotes", "dashboard"].includes(variant)) {
+  if (["customers", "quotes", "dashboard", "settings"].includes(variant)) {
     return <AuthenticatedWorkspace variant={variant} search={search} onSearch={onSearch} onNewQuote={onNewQuote}>{children}</AuthenticatedWorkspace>;
   }
 
@@ -29,6 +29,8 @@ export default function AuthenticatedLayout({ children, variant, search, onSearc
           <NavLink to="/customers">Clienti</NavLink>
           {" | "}
           <NavLink to="/quotes">Preventivi</NavLink>
+          {" | "}
+          <NavLink to="/settings">Impostazioni</NavLink>
         </nav>
 
         <button type="button" onClick={handleLogout}>

@@ -23,7 +23,7 @@ export default function AuthenticatedWorkspace({ children, variant, search, onSe
   }
 
   return (
-    <div className={`sq-workspace ${variant === "dashboard" ? "dashboard-workspace" : variant === "quotes" ? "quote-workspace" : "customer-workspace"}`}>
+    <div className={`sq-workspace ${variant === "settings" ? "settings-workspace" : variant === "dashboard" ? "dashboard-workspace" : variant === "quotes" ? "quote-workspace" : "customer-workspace"}`}>
       <aside className="sq-sidebar">
         <Link to="/" className="sq-brand" aria-label="SmartQuote, dashboard">
           <span className="sq-brand-mark"><Icon name="quote" size={23} /></span>
@@ -34,6 +34,7 @@ export default function AuthenticatedWorkspace({ children, variant, search, onSe
           <NavLink to="/" end><Icon name="grid" size={25} />Dashboard</NavLink>
           <NavLink to="/quotes"><Icon name="document" size={25} />Preventivi</NavLink>
           <NavLink to="/customers"><Icon name="users" size={25} />Clienti</NavLink>
+          <NavLink to="/settings"><Icon name="settings" size={25} />Impostazioni</NavLink>
         </nav>
         <Link to="/quotes" className="sq-engine">
           <span><Icon name="sparkle" size={18} />Smart Engine</span>
@@ -43,10 +44,10 @@ export default function AuthenticatedWorkspace({ children, variant, search, onSe
 
       <div className="sq-workspace-body">
         <header className="sq-topbar">
-          <label className="sq-search sq-global-search">
+          {onSearch ? <label className="sq-search sq-global-search">
             <Icon name="search" size={24} />
             <input type="search" aria-label={searchLabel} placeholder={`${searchLabel}…`} value={search} onChange={(event) => onSearch(event.target.value)} />
-          </label>
+          </label> : <span className="sq-topbar-title">Impostazioni account</span>}
           <div className="sq-topbar-actions">
             {onNewQuote ? (
               <button type="button" className="sq-button sq-button-primary sq-new-quote" onClick={onNewQuote} aria-label="Nuovo preventivo"><Icon name="plus" /><span>Nuovo preventivo</span></button>
@@ -61,6 +62,7 @@ export default function AuthenticatedWorkspace({ children, variant, search, onSe
               </summary>
               <div className="sq-account-panel">
                 <span>{user?.email || username}</span>
+                <Link to="/settings" onClick={(event) => { event.currentTarget.closest("details").open = false; }}><Icon name="settings" size={18} />Impostazioni</Link>
                 <button type="button" onClick={handleLogout} disabled={loggingOut}><Icon name="logout" size={18} />{loggingOut ? "Uscita…" : "Esci"}</button>
               </div>
             </details>

@@ -32,6 +32,8 @@ import {
   MdOutlineExpandLess,
   MdOutlineExpandMore,
   MdOutlineRefresh,
+  MdOutlineSettings,
+  MdOutlineLock,
 } from "react-icons/md";
 import { FaWhatsapp } from "react-icons/fa";
 
@@ -70,6 +72,8 @@ const icons = {
   collapse: MdOutlineExpandLess,
   expand: MdOutlineExpandMore,
   refresh: MdOutlineRefresh,
+  settings: MdOutlineSettings,
+  lock: MdOutlineLock,
 };
 
 export default function Icon({ name, size = 20, className = "" }) {

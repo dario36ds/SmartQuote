@@ -15,6 +15,8 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadUser() {
       if (!token) {
         setLoading(false);
@@ -26,18 +28,46 @@ export function AuthProvider({ children }) {
           token,
         });
 
-        setUser(data);
+        if (!cancelled) setUser(data);
       } catch {
+        if (cancelled) return;
         localStorage.removeItem("token");
         setToken(null);
         setUser(null);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
     loadUser();
+    return () => { cancelled = true; };
   }, [token]);
+
+  async function changeEmail(email, currentPassword) {
+    const data = await apiRequest("/auth/me/", {
+      method: "PATCH",
+      token,
+      body: { email, current_password: currentPassword },
+    });
+    setUser(data);
+    return data;
+  }
+
+  async function changePassword(currentPassword, newPassword, confirmPassword) {
+    const data = await apiRequest("/auth/change-password/", {
+      method: "POST",
+      token,
+      body: {
+        current_password: currentPassword,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      },
+    });
+    localStorage.setItem("token", data.token);
+    setToken(data.token);
+    setUser(data.user);
+    return data;
+  }
 
   async function login(username, password) {
     const data = await apiRequest("/auth/login/", {
@@ -78,6 +108,8 @@ export function AuthProvider({ children }) {
         loading,
         login,
         logout,
+        changeEmail,
+        changePassword,
         isAuthenticated: Boolean(token),
       }}
     >

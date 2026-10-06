@@ -10,6 +10,7 @@ import LoginPage from "./pages/LoginPage";
 import PublicQuotePage from "./pages/PublicQuotePage";
 import QuotesPage from "./pages/QuotesPage";
 import RegisterPage from "./pages/RegisterPage";
+import SettingsPage from "./pages/SettingsPage";
 
 export default function App() {
   return (
@@ -43,6 +44,15 @@ export default function App() {
         element={
           <ProtectedRoute>
             <QuotesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
           </ProtectedRoute>
         }
       />

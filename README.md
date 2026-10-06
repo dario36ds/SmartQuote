@@ -4,7 +4,7 @@ SmartQuote è un’applicazione per creare e gestire preventivi commerciali, org
 
 ## Funzionalità
 
-- **Account:** registrazione, accesso e logout con autenticazione tramite token; pulsante per mostrare o nascondere la password.
+- **Account:** registrazione, accesso e logout con autenticazione tramite token; pagina Impostazioni per cambiare email e password confermando la password attuale, con controlli sulla robustezza della nuova password e rinnovo del token; pulsante per mostrare o nascondere la password.
 - **Clienti:** creazione, modifica ed eliminazione dell’anagrafica, ricerca, filtri, ordinamento e paginazione, con riepiloghi dei preventivi associati.
 - **Preventivi:** editor con cliente, titolo, descrizione, tempi di consegna e voci di costo; creazione di un nuovo cliente direttamente nell’editor, con selezione automatica e mantenimento dei dati già inseriti; calcolo dei totali, salvataggio in bozza e anteprima.
 - **Testi AI:** generazione con tono professionale, cordiale, sintetico o commerciale. La bozza viene salvata prima della generazione; il testo può essere rivisto e deve essere salvato per conservarne le modifiche. In caso di errore, la descrizione precedente rimane disponibile.
@@ -161,6 +161,7 @@ Riavvia il servizio interessato dopo aver modificato la configurazione. Se cambi
 | Dashboard | `/` |
 | Clienti | `/customers` |
 | Preventivi | `/quotes` |
+| Impostazioni account | `/settings` |
 | Accesso e registrazione | `/login`, `/register` |
 | Preventivo pubblico | `/q/:token` |
 
@@ -169,7 +170,8 @@ Le API private richiedono l’header `Authorization: Token <token>`. Clienti e p
 | API | Operazioni |
 | --- | --- |
 | `/api/auth/register/`, `/api/auth/login/`, `/api/auth/logout/` | `POST`: registrazione, accesso e logout. |
-| `/api/auth/me/` | `GET`: utente corrente. |
+| `/api/auth/me/` | `GET`: utente corrente; `PATCH`: modifica email con `email` e `current_password`. |
+| `/api/auth/change-password/` | `POST`: modifica password con `current_password`, `new_password` e `confirm_password`; restituisce utente e nuovo token, invalidando il precedente. |
 | `/api/customers/` | `GET`, `POST`: elenco e creazione clienti. |
 | `/api/customers/:id/` | `GET`, `PUT`, `PATCH`, `DELETE`: gestione del singolo cliente. |
 | `/api/quotes/` | `GET`, `POST`: elenco e creazione preventivi. |
