@@ -44,6 +44,8 @@ SmartQuote/
 │       ├── pages/      # Pagine dell’applicazione
 │       └── utils/      # Dashboard e condivisione
 ├── .env.example
+├── docker/           # Avvio, controlli e frontend del container unico
+├── Dockerfile        # Immagine completa dell’applicazione
 └── docker-compose.yml
 ```
 
@@ -61,9 +63,11 @@ Configura `DJANGO_SECRET_KEY` nel nuovo `.env` con una chiave casuale locale e a
 docker compose up --build
 ```
 
-Compose avvia PostgreSQL e Ollama, scarica il modello configurato se non è già disponibile, applica le migrazioni e avvia backend e frontend. Il primo avvio può richiedere tempo per il download del modello. Database e modelli vengono conservati nei volumi Docker.
+Compose costruisce e avvia un solo container `app`, che contiene PostgreSQL 17, Ollama, Django, il frontend compilato servito da Nginx e il processo dei promemoria. L’avvio prepara il database, applica le migrazioni, scarica il modello AI solo se manca e avvia l’applicazione. Il primo avvio può richiedere tempo per il download del modello. Database e modelli vengono conservati nei volumi `postgres_data` e `ollama_data`, mantenendo quelli della precedente configurazione. Se un processo si ferma, vengono arrestati anche gli altri e Compose riavvia il container.
 
-Il servizio `reminders` controlla ogni minuto i preventivi e genera i promemoria anche quando l’app è chiusa. Per l’avvio locale puoi eseguire `uv run manage.py generate_quote_reminders --watch --interval 60` in un terminale dalla cartella `Backend`; senza `--watch` esegue un solo controllo. La lettura delle notifiche recupera anche i promemoria scaduti dell’utente corrente.
+Il processo dei promemoria è incluso nel container `app`: controlla ogni minuto i preventivi e genera i promemoria anche quando la pagina nel browser è chiusa. Il container deve rimanere avviato. Per l’avvio locale puoi eseguire `uv run manage.py generate_quote_reminders --watch --interval 60` in un terminale dalla cartella `Backend`; senza `--watch` esegue un solo controllo. La lettura delle notifiche recupera anche i promemoria scaduti dell’utente corrente.
+
+Se usavi già la configurazione con più container, aggiungi `COMPOSE_REMOVE_ORPHANS=true` al tuo `.env` (già presente nell’esempio). In questo modo lo stesso comando rimuove i vecchi container del progetto prima di avviare quello unico, senza eliminare i volumi. [Documentazione Docker](https://docs.docker.com/compose/how-tos/environment-variables/envvars/#compose_remove_orphans).
 
 | Servizio | Indirizzo locale |
 | --- | --- |
@@ -74,11 +78,17 @@ Il servizio `reminders` controlla ogni minuto i preventivi e genera i promemoria
 Per consultare i log o fermare i servizi:
 
 ```bash
-docker compose logs -f backend ollama ollama-init
+docker compose logs -f app
 docker compose down
 ```
 
-La configurazione inclusa usa i server di sviluppo Django e Vite. Ollama è raggiungibile dal backend nella rete interna di Compose.
+L’API usa il server di sviluppo Django; in Docker il frontend viene compilato e servito da Nginx. Le richieste a `/api/` vengono inoltrate a Django sullo stesso host, quindi funzionano anche aprendo la pagina da un altro dispositivo (configurando `DJANGO_ALLOWED_HOSTS`). PostgreSQL e Ollama comunicano con Django all’interno dello stesso container.
+
+Per eseguire comandi Django nel container:
+
+```bash
+docker compose exec app python manage.py createsuperuser
+```
 
 ## Avvio locale
 
@@ -93,10 +103,13 @@ cp .env.example .env
 cp Frontend/.env.example Frontend/.env
 ```
 
-Imposta `DJANGO_SECRET_KEY` e le credenziali PostgreSQL nel `.env` della radice. Puoi usare un database locale già configurato oppure avviare solo PostgreSQL tramite Compose:
+Imposta `DJANGO_SECRET_KEY` e le credenziali PostgreSQL nel `.env` della radice. Puoi usare un database locale già configurato oppure avviare PostgreSQL separatamente con le credenziali dell’esempio (adattale ai tuoi valori). Se il container completo è già avviato, il suo database è disponibile sulla porta configurata e non serve un secondo PostgreSQL:
 
 ```bash
-docker compose up -d db
+docker run -d --name smartquote-local-db \
+  -e POSTGRES_DB=smartquote -e POSTGRES_USER=smartquote \
+  -e POSTGRES_PASSWORD=smartquote_password \
+  -p 5432:5432 -v smartquote_local_postgres:/var/lib/postgresql/data postgres:17
 ```
 
 ### 2. Ollama
@@ -144,7 +157,7 @@ Apri http://127.0.0.1:5173 e registra un account. Dalla pagina Preventivi puoi s
 
 ## Variabili d’ambiente
 
-Il backend legge il `.env` nella radice del progetto; le variabili già impostate nel processo hanno precedenza. Nell’avvio locale, Vite legge `Frontend/.env`; con Docker, l’indirizzo API viene passato dal `.env` della radice.
+Il backend legge il `.env` nella radice del progetto; le variabili già impostate nel processo hanno precedenza. Nell’avvio locale, Vite legge `Frontend/.env`; in Docker il frontend compilato usa `/api` e Nginx inoltra le richieste al backend.
 
 | Variabile | Utilizzo |
 | --- | --- |
@@ -153,12 +166,13 @@ Il backend legge il `.env` nella radice del progetto; le variabili già impostat
 | `DJANGO_ALLOWED_HOSTS` | Host consentiti, separati da virgole, senza schema o porta. |
 | `CORS_ALLOWED_ORIGINS` | Origini del frontend consentite, con schema e porta. |
 | `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Nome del database e credenziali PostgreSQL. |
-| `DB_HOST`, `DB_PORT` | Indirizzo PostgreSQL; Compose usa internamente `db:5432`. |
-| `OLLAMA_BASE_URL` | Indirizzo di Ollama; in locale è `http://127.0.0.1:11434`, in Compose è `http://ollama:11434`. |
+| `DB_HOST`, `DB_PORT` | Indirizzo PostgreSQL; nel container unico Compose usa internamente `127.0.0.1:5432` (la porta esterna resta configurabile). |
+| `OLLAMA_BASE_URL` | Indirizzo di Ollama; in locale è `http://127.0.0.1:11434`, nel container unico è `http://127.0.0.1:11434`. |
 | `OLLAMA_MODEL` | Modello da usare per la generazione del testo. |
-| `VITE_API_BASE_URL` | Indirizzo API raggiungibile dal browser; predefinito `http://127.0.0.1:8000/api`. |
+| `VITE_API_BASE_URL` | Solo per Vite nell’avvio locale, in `Frontend/.env`; predefinito `http://127.0.0.1:8000/api`. Docker usa `/api`. |
+| `COMPOSE_REMOVE_ORPHANS` | Rimuove i vecchi container dello stesso progetto dopo il passaggio al container unico; non elimina i volumi. |
 
-Riavvia il servizio interessato dopo aver modificato la configurazione. Se cambi porta o host del frontend, aggiorna anche `CORS_ALLOWED_ORIGINS`. I file `.env` locali sono esclusi da Git; i valori di esempio sono in [.env.example](.env.example) e [Frontend/.env.example](Frontend/.env.example).
+In Docker rilancia `docker compose up --build` dopo aver modificato la configurazione. Se cambi porta o host del frontend, aggiorna anche `CORS_ALLOWED_ORIGINS`. I file `.env` locali sono esclusi da Git; i valori di esempio sono in [.env.example](.env.example) e [Frontend/.env.example](Frontend/.env.example).
 
 ## Pagine e API
 
@@ -201,6 +215,12 @@ Controlli frontend, dalla cartella `Frontend`:
 npm run lint
 npm test
 npm run build
+```
+
+Test dell’avvio e dell’arresto dei processi Docker, dalla radice:
+
+```bash
+python3 -m unittest discover -s docker/tests -v
 ```
 
 Controlli e test backend, dalla cartella `Backend`, con PostgreSQL configurato e disponibile:

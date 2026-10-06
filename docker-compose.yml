@@ -1,86 +1,31 @@
 services:
-  db:
-    image: postgres:17
-    container_name: smartquote_postgres
-    restart: unless-stopped
-
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-
-    ports:
-      - "${DB_PORT:-5432}:5432"
-
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-
-  ollama:
-    image: ollama/ollama:0.32.0
-    environment:
-      OLLAMA_HOST: "0.0.0.0:11434"
-      OLLAMA_NO_CLOUD: "1"
-    volumes:
-      - ollama_data:/root/.ollama
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-
-  ollama-init:
-    image: ollama/ollama:0.32.0
-    environment:
-      OLLAMA_HOST: http://ollama:11434
-      OLLAMA_MODEL: ${OLLAMA_MODEL:?Configura OLLAMA_MODEL nel .env}
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - 'ollama show "$$OLLAMA_MODEL" >/dev/null 2>&1 || exec ollama pull "$$OLLAMA_MODEL"'
-    depends_on:
-      ollama:
-        condition: service_healthy
-
-  backend:
-    build: ./Backend
+  app:
+    build: .
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      DB_HOST: db
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: 127.0.0.1
       DB_PORT: "5432"
-      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_BASE_URL: http://127.0.0.1:11434
       OLLAMA_MODEL: ${OLLAMA_MODEL:?Configura OLLAMA_MODEL nel .env}
     ports:
-      - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-      ollama-init:
-        condition: service_completed_successfully
-    healthcheck:
-      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8000), timeout=3).close()"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-
-  frontend:
-    build: ./Frontend
-    environment:
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://127.0.0.1:8000/api}
-    ports:
       - "5173:5173"
-    depends_on:
-      backend:
-        condition: service_healthy
+      - "8000:8000"
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ollama_data:/root/.ollama
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "python", "/app/docker/healthcheck.py"]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 30m
 
 volumes:
   postgres_data:

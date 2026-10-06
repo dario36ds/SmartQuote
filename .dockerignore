@@ -1,0 +1,16 @@
+.git
+.agents
+.codex
+.aws
+**/.env
+**/.env.*
+!**/.env.example
+**/.venv
+**/node_modules
+**/dist
+**/__pycache__
+**/*.py[cod]
+**/.DS_Store
+**/*.log
+**/db.sqlite3
+**/staticfiles
