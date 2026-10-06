@@ -10,7 +10,7 @@
 .settings-card { min-width: 0; padding: 28px; border: 1px solid var(--sq-border); border-radius: 16px; background: #fff; box-shadow: 0 3px 12px #17233b03; }
 .settings-card-heading { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 26px; }
 .settings-card-heading > div { min-width: 0; overflow-wrap: anywhere; }
-.settings-card h2 { font-size: 20px; font-weight: 600; letter-spacing: -.4px; }
+.settings-card h2, .settings-card h3, .settings-credentials-heading h2 { font-size: 20px; font-weight: 600; letter-spacing: -.4px; }
 .settings-card-heading p { margin-top: 6px; font-size: 14px; color: var(--sq-text-secondary); }
 .settings-card fieldset { display: grid; gap: 18px; min-width: 0; margin: 0; padding: 0; border: 0; }
 .settings-field { display: grid; gap: 7px; min-width: 0; }
@@ -28,6 +28,10 @@
 .settings-card fieldset:disabled input { opacity: .6; }
 .settings-checkbox { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; line-height: 1.6; cursor: pointer; }
 .settings-checkbox input { flex-shrink: 0; width: 20px; height: 20px; accent-color: var(--sq-primary); }
+.settings-credentials { grid-column: 1 / -1; min-width: 0; padding: 28px; border: 1px solid var(--sq-border); border-radius: 16px; background: var(--sq-soft); }
+.settings-credentials-heading .settings-section-icon { background: #fff; }
+.settings-credentials .settings-account-summary { padding: 16px 20px; }
+.settings-credentials .settings-card h3 { font-size: 18px; }
 .settings-company-card { grid-column: 1 / -1; }
 .settings-company-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; }
 .settings-field-wide { grid-column: 1 / -1; }
@@ -49,6 +53,7 @@
   .settings-heading h1 { font-size: 28px; }
   .settings-heading p { font-size: 14px; }
   .settings-card { padding: 20px; }
+  .settings-credentials { padding: 20px 12px; }
   .settings-account-summary { padding: 16px; }
   .settings-grid { gap: 16px; }
   .settings-card .sq-button { width: 100%; }
