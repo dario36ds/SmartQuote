@@ -90,12 +90,14 @@ export default function RegisterPage() {
               id="password"
               name="password"
               autoComplete="new-password"
+              aria-describedby="register-password-hint"
               disabled={loading || success}
               minLength={8}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
             />
+            <p id="register-password-hint" className="auth-hint">Evita password comuni, solo numeriche o simili al tuo username e alla tua email.</p>
           </div>
 
           {error && <p className="auth-feedback auth-error" role="alert">{error}</p>}

@@ -4,7 +4,7 @@ SmartQuote è un’applicazione full-stack per gestire clienti e preventivi comm
 
 ## Funzionalità principali
 
-- **Account:** registrazione con username, password di almeno 8 caratteri ed email facoltativa; accesso e logout tramite token. Nelle Impostazioni è possibile modificare email e password confermando la password attuale. Il cambio password applica i validatori Django e sostituisce il token di autenticazione.
+- **Account:** registrazione con username, password di almeno 8 caratteri ed email facoltativa; accesso e logout tramite token. Registrazione e cambio password applicano i validatori Django, rifiutando password comuni, solo numeriche o troppo simili ai dati dell’account. Nelle Impostazioni è possibile modificare email e password confermando la password attuale. Il cambio password sostituisce il token di autenticazione.
 - **Profilo aziendale:** nelle Impostazioni ogni utente può salvare nome dell’attività, logo, indirizzo, partita IVA, telefono e sito web. I dati vengono mostrati nei nuovi preventivi pubblicati e restano quelli originali anche dopo successive modifiche al profilo.
 - **Clienti:** creazione, modifica ed eliminazione di nome, azienda, email, telefono e indirizzo; ricerca, filtri per tipologia e stato dei preventivi, ordinamento e paginazione. Ogni cliente mostra un riepilogo delle proposte associate.
 - **Preventivi:** editor con cliente, titolo, descrizione, tempi di consegna e voci di costo; salvataggio in bozza, modifica, anteprima, pubblicazione ed eliminazione. È possibile creare e selezionare un nuovo cliente direttamente nell’editor, mantenendo i dati già compilati.

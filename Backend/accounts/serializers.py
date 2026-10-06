@@ -29,6 +29,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
         min_length=8,
+        trim_whitespace=False,
     )
 
     class Meta:
@@ -45,6 +46,14 @@ class RegisterSerializer(serializers.ModelSerializer):
                 "error_messages": {"invalid": "Inserisci un indirizzo email valido, ad esempio nome@azienda.it."},
             },
         }
+
+    def validate(self, attrs):
+        user = User(username=attrs["username"], email=attrs.get("email", ""))
+        try:
+            validate_password(attrs["password"], user=user)
+        except ValidationError as exc:
+            raise serializers.ValidationError({"password": exc.messages}) from exc
+        return attrs
 
     def create(self, validated_data):
         return User.objects.create_user(

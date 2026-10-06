@@ -144,6 +144,13 @@
   overflow-wrap: anywhere;
 }
 
+.auth-hint {
+  margin: 0;
+  color: var(--sq-text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .auth-error {
   color: var(--sq-status-rejected);
   background: var(--sq-status-rejected-bg);
