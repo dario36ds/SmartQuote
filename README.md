@@ -282,7 +282,7 @@ La richiesta non usa streaming e ha un timeout di 120 secondi. Errori di conness
 | --- | --- |
 | `DRAFT` — Bozza | Modificabile e utilizzabile per la generazione AI; la pagina pubblica non è accessibile. |
 | `SENT` — Inviato | Il link è stato pubblicato e la data di invio registrata. |
-| `VIEWED` — Visualizzato | La prima consultazione dell’API pubblica registra la visualizzazione; anche l’apertura del link da parte del gestore produce questo passaggio. |
+| `VIEWED` — Visualizzato | Dopo il caricamento della pagina pubblica, il frontend registra la visualizzazione tramite un POST dedicato; anche l’apertura del link da parte del gestore produce questo passaggio. Il GET pubblico non modifica il preventivo. |
 | `ACCEPTED` — Accettato | Il cliente ha confermato l’accettazione. |
 | `REJECTED` — Rifiutato | Il cliente ha confermato il rifiuto. |
 
@@ -326,7 +326,8 @@ Nella tabella `:id` indica l’identificativo numerico e `:token` il token UUID 
 | GET, PUT, PATCH, DELETE | `/api/quotes/:id/` | Lettura, modifica della bozza ed eliminazione preventivo. | Token |
 | POST | `/api/quotes/:id/generate-text/` | Testo AI per una bozza; `tone`: `professional`, `friendly`, `concise`, `commercial`. | Token |
 | POST | `/api/quotes/:id/publish/` | Pubblicazione della bozza. | Token |
-| GET | `/api/quotes/public/:token/` | Consultazione e registrazione della prima visualizzazione. | Pubblica, tramite UUID |
+| GET | `/api/quotes/public/:token/` | Consultazione senza modificare il preventivo. | Pubblica, tramite UUID |
+| POST | `/api/quotes/public/:token/view/` | Prima visualizzazione: passaggio da SENT a VIEWED; chiamate successive non modificano stato o timestamp. | Pubblica, tramite UUID |
 | POST | `/api/quotes/public/:token/accept/` | Accettazione di un preventivo inviato o visualizzato. | Pubblica, tramite UUID |
 | POST | `/api/quotes/public/:token/reject/` | Rifiuto di un preventivo inviato o visualizzato. | Pubblica, tramite UUID |
 | GET | `/api/notifications/` | Ultime 50 notifiche, conteggio non lette e recupero dei promemoria scaduti. | Token |

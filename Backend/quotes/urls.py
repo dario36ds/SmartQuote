@@ -6,6 +6,7 @@ from .views import (
     PublicQuoteView,
     QuoteViewSet,
     RejectQuoteView,
+    ViewQuoteView,
 )
 
 
@@ -22,6 +23,11 @@ urlpatterns = [
         "public/<uuid:token>/",
         PublicQuoteView.as_view(),
         name="public-quote",
+    ),
+    path(
+        "public/<uuid:token>/view/",
+        ViewQuoteView.as_view(),
+        name="view-quote",
     ),
     path(
         "public/<uuid:token>/accept/",

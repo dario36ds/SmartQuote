@@ -140,12 +140,10 @@ class QuoteViewSet(ModelViewSet):
 class PublicQuoteView(APIView):
     permission_classes = [AllowAny]
 
-    @transaction.atomic
     def get(self, request, token):
         try:
             quote = (
                 Quote.objects
-                .select_for_update(of=("self",))
                 .select_related("customer")
                 .prefetch_related("items")
                 .get(public_token=token)
@@ -162,9 +160,33 @@ class PublicQuoteView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        return Response(
+            PublicQuoteSerializer(quote).data
+        )
+
+
+class ViewQuoteView(APIView):
+    permission_classes = [AllowAny]
+
+    @transaction.atomic
+    def post(self, request, token):
+        try:
+            quote = Quote.objects.select_for_update(of=("self",)).get(public_token=token)
+        except Quote.DoesNotExist:
+            return Response(
+                {"detail": "Preventivo non trovato."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if quote.status == Quote.Status.DRAFT:
+            return Response(
+                {"detail": "Preventivo non disponibile."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
         if quote.status == Quote.Status.SENT:
             quote.status = Quote.Status.VIEWED
-            quote.viewed_at = timezone.now()
+            quote.viewed_at = quote.viewed_at or timezone.now()
 
             quote.save(
                 update_fields=[
@@ -173,9 +195,7 @@ class PublicQuoteView(APIView):
                 ]
             )
 
-        return Response(
-            PublicQuoteSerializer(quote).data
-        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class AcceptQuoteView(APIView):
     permission_classes = [AllowAny]
