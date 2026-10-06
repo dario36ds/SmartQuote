@@ -41,6 +41,7 @@ function PublicQuote({ token }) {
   const [decision, setDecision] = useState(null);
   const [saving, setSaving] = useState(false);
   const busy = useRef(false);
+  const viewRequested = useRef(false);
   const dialog = useRef(null);
   const canRespond = quote && ["SENT", "VIEWED"].includes(quote.status);
   const accepted = quote?.status === "ACCEPTED";
@@ -49,7 +50,15 @@ function PublicQuote({ token }) {
   useEffect(() => {
     let active = true;
     apiRequest(`/quotes/public/${token}/`).then((data) => {
-      if (active) { setQuote(data); setError(""); }
+      if (active) {
+        setQuote(data);
+        setError("");
+        if (!viewRequested.current) {
+          viewRequested.current = true;
+          apiRequest(`/quotes/public/${token}/view/`, { method: "POST" })
+            .catch(() => { /* Tracking must not interrupt viewing or responding. */ });
+        }
+      }
     }).catch((err) => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
