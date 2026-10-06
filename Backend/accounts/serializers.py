@@ -1,9 +1,23 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from rest_framework import serializers
 
 from config.validators import validate_contact_email
+from .models import CompanyProfile
+
+
+class CompanyProfileSerializer(serializers.ModelSerializer):
+    website = serializers.URLField(
+        max_length=200, required=False, allow_blank=True,
+        validators=[URLValidator(schemes=["http", "https"])],
+        error_messages={"invalid": "Inserisci un sito valido che inizi con https:// o http://."},
+    )
+
+    class Meta:
+        model = CompanyProfile
+        fields = ("name", "address", "vat_number", "phone", "website")
 
 
 class RegisterSerializer(serializers.ModelSerializer):

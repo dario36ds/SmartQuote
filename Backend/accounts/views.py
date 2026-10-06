@@ -7,12 +7,29 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .models import CompanyProfile
 from .serializers import (
     ChangeEmailSerializer,
     ChangePasswordSerializer,
     RegisterSerializer,
     UserSerializer,
+    CompanyProfileSerializer,
 )
+
+
+class CompanyProfileView(APIView):
+    def get(self, request):
+        profile = CompanyProfile.objects.filter(user=request.user).first()
+        return Response(CompanyProfileSerializer(profile or CompanyProfile()).data)
+
+    @transaction.atomic
+    def patch(self, request):
+        user = User.objects.select_for_update().get(pk=request.user.pk)
+        profile, _ = CompanyProfile.objects.get_or_create(user=user)
+        serializer = CompanyProfileSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 class RegisterView(APIView):
