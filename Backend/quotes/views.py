@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
@@ -14,6 +15,8 @@ from ai_service.services import (
     OllamaServiceError,
     generate_quote_text,
 )
+from accounts.models import CompanyProfile
+from accounts.serializers import CompanyProfileSerializer
 
 
 class QuoteViewSet(ModelViewSet):
@@ -112,6 +115,10 @@ class QuoteViewSet(ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Share the lock used by profile edits to capture the saved company data.
+        get_user_model().objects.select_for_update().get(pk=request.user.pk)
+        profile = CompanyProfile.objects.filter(user=request.user).first()
+        quote.company_profile_snapshot = dict(CompanyProfileSerializer(profile).data) if profile else {}
         quote.status = Quote.Status.SENT
         quote.sent_at = timezone.now()
 
@@ -119,6 +126,7 @@ class QuoteViewSet(ModelViewSet):
             update_fields=[
                 "status",
                 "sent_at",
+                "company_profile_snapshot",
             ]
         )
 

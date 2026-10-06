@@ -96,7 +96,7 @@ export default function CompanyProfileSettings({ busy = false, onSavingChange })
   return <section className="settings-card settings-company-card" aria-labelledby="settings-company-heading">
     <div className="settings-card-heading">
       <span className="settings-section-icon"><Icon name="store" size={24} /></span>
-      <div><h2 id="settings-company-heading">Profilo aziendale</h2><p>Gestisci i dati con cui presenti la tua attività ai clienti.</p></div>
+      <div><h2 id="settings-company-heading">Profilo aziendale</h2><p>Personalizza i dati e il logo mostrati nei preventivi condivisi con i clienti.</p></div>
     </div>
     {loadError ? <>
       <p className="settings-feedback settings-error" role="alert">Impossibile caricare il profilo aziendale: {loadError}</p>
@@ -120,7 +120,7 @@ export default function CompanyProfileSettings({ busy = false, onSavingChange })
             <ValidatedInput {...input} id={`settings-company-${name}`} name={name} value={form[name]} onChange={(event) => { setForm((current) => ({ ...current, [name]: event.target.value })); setFeedback(null); }} />
           </div>)}
         </div>
-        <p className="settings-hint">Tutti i campi sono facoltativi. Per il sito web inserisci un indirizzo completo con https:// o http://.</p>
+        <p className="settings-hint">Tutti i campi sono facoltativi. Per il sito web inserisci un indirizzo completo con https:// o http://. Le modifiche si applicano alle prossime pubblicazioni: i preventivi già inviati mantengono i dati originali.</p>
         {feedback && <p className={`settings-feedback ${feedback.success ? "settings-success" : "settings-error"}`} role={feedback.success ? "status" : "alert"}>{feedback.message}</p>}
         <div className="settings-company-actions">
           <button type="submit" className="sq-button sq-button-primary" disabled={!changed}><Icon name="save" />{saving ? "Salvataggio…" : "Salva profilo aziendale"}</button>

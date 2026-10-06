@@ -5,6 +5,7 @@ SmartQuote è un’applicazione full-stack per gestire clienti e preventivi comm
 ## Funzionalità principali
 
 - **Account:** registrazione con username, password di almeno 8 caratteri ed email facoltativa; accesso e logout tramite token. Nelle Impostazioni è possibile modificare email e password confermando la password attuale. Il cambio password applica i validatori Django e sostituisce il token di autenticazione.
+- **Profilo aziendale:** nelle Impostazioni ogni utente può salvare nome dell’attività, logo, indirizzo, partita IVA, telefono e sito web. I dati vengono mostrati nei nuovi preventivi pubblicati e restano quelli originali anche dopo successive modifiche al profilo.
 - **Clienti:** creazione, modifica ed eliminazione di nome, azienda, email, telefono e indirizzo; ricerca, filtri per tipologia e stato dei preventivi, ordinamento e paginazione. Ogni cliente mostra un riepilogo delle proposte associate.
 - **Preventivi:** editor con cliente, titolo, descrizione, tempi di consegna e voci di costo; salvataggio in bozza, modifica, anteprima, pubblicazione ed eliminazione. È possibile creare e selezionare un nuovo cliente direttamente nell’editor, mantenendo i dati già compilati.
 - **Ricerca preventivi:** ricerca per titolo, descrizione, cliente e servizi; filtri per cliente e stato, ordinamento per data, importo o titolo e paginazione.
@@ -289,6 +290,14 @@ Il link pubblico consente la consultazione e la risposta a chi lo possiede, senz
 
 La pubblicazione imposta `SENT`: **non certifica l’invio di un’email o di un messaggio WhatsApp**. I pulsanti aprono `mailto:` o WhatsApp con destinatario, testo e link già compilati; l’utente conferma l’invio nell’app scelta. I numeri nazionali usano il prefisso +39, mentre quelli con + o 00 conservano il prefisso internazionale. Se manca il contatto, il relativo pulsante indica il dato da aggiungere al cliente.
 
+### Profilo aziendale
+
+In **Impostazioni → Profilo aziendale** puoi salvare nome dell’attività, logo, indirizzo, partita IVA, telefono e sito web. Tutti i campi sono facoltativi e puoi svuotarli; il sito deve iniziare con `https://` o `http://`. Il telefono usa gli stessi controlli dell’anagrafica clienti. Questi dati sono separati dalle credenziali dell’account.
+
+Il logo ammette **PNG, JPG e WebP**, fino a **512 KB** e **4 milioni di pixel**. Puoi visualizzarlo in anteprima, sostituirlo o rimuoverlo e poi salvare il profilo. Il backend controlla il contenuto del file, rimuove i metadati e conserva una versione PNG di massimo **256 × 256 pixel** nel database: non occorre un volume aggiuntivo per i file caricati. Pillow è incluso nelle dipendenze del backend e nel lockfile.
+
+Alla pubblicazione, il preventivo conserva una copia dei dati aziendali e del logo, mostrata nella pagina pubblica con telefono e sito cliccabili. Le modifiche successive al profilo si applicano alle prossime pubblicazioni, comprese le bozze già create. I preventivi pubblicati prima di questa funzione mantengono la visualizzazione precedente. Se il profilo è vuoto, la scheda aziendale non viene mostrata.
+
 ### Notifiche e promemoria
 
 I promemoria sono attivi per default dopo **7 giorni** dalla pubblicazione. In Impostazioni puoi disattivarli oppure scegliere un intervallo intero da **1 a 365 giorni**. La soglia usa `sent_at` e si applica anche ai preventivi già inviati o visualizzati, purché ancora senza risposta.
@@ -310,6 +319,7 @@ Nella tabella `:id` indica l’identificativo numerico e `:token` il token UUID 
 | POST | `/api/auth/logout/` | Logout e invalidazione del token. | Token |
 | GET, PATCH | `/api/auth/me/` | Profilo corrente; modifica email con `email` e `current_password`. | Token |
 | POST | `/api/auth/change-password/` | Cambio con `current_password`, `new_password`, `confirm_password`; restituisce un nuovo token. | Token |
+| GET, PATCH | `/api/auth/company-profile/` | Profilo aziendale personale: `name`, `address`, `vat_number`, `phone`, `website`, `logo` (data URL base64; stringa vuota per rimuoverlo). | Token |
 | GET, POST | `/api/customers/` | Elenco e creazione clienti. | Token |
 | GET, PUT, PATCH, DELETE | `/api/customers/:id/` | Lettura, modifica ed eliminazione cliente. | Token |
 | GET, POST | `/api/quotes/` | Elenco e creazione preventivi. | Token |
@@ -333,9 +343,10 @@ Ricerca, filtri, ordinamento, paginazione e statistiche della dashboard vengono 
 | Modello | Ruolo |
 | --- | --- |
 | `User` | Utente standard Django e credenziali di accesso. |
+| `CompanyProfile` | Dati aziendali e logo, una configurazione per utente. |
 | `Token` | Token di autenticazione di Django REST Framework. |
 | `Customer` | Anagrafica appartenente a un utente. |
-| `Quote` | Preventivo collegato a un cliente, con stato, token pubblico e date del ciclo di vita. |
+| `Quote` | Preventivo collegato a un cliente, con stato, token pubblico, date del ciclo di vita e copia del profilo aziendale alla pubblicazione. |
 | `QuoteItem` | Voce del preventivo con descrizione, quantità e prezzo unitario. |
 | `QuoteNotification` | Notifica per il proprietario, stato di lettura e riepilogo del cliente e della proposta. |
 | `QuoteReminderSettings` | Preferenze dei promemoria, una configurazione per utente. |

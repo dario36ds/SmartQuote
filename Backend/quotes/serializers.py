@@ -165,6 +165,7 @@ class QuoteSerializer(serializers.ModelSerializer):
 
 class PublicQuoteSerializer(serializers.ModelSerializer):
     items = QuoteItemSerializer(many=True, read_only=True)
+    business_profile = serializers.JSONField(source="company_profile_snapshot", read_only=True)
 
     total = serializers.DecimalField(
         max_digits=12,
@@ -191,6 +192,7 @@ class PublicQuoteSerializer(serializers.ModelSerializer):
             "status",
             "customer_name",
             "company_name",
+            "business_profile",
             "items",
             "total",
             "sent_at",

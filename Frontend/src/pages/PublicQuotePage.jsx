@@ -8,6 +8,26 @@ import "./PublicQuotePage.css";
 const money = (value) => Number(value).toLocaleString("it-IT", { style: "currency", currency: "EUR", useGrouping: "always" });
 const date = (value) => value ? new Date(value).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" }) : null;
 
+function BusinessProfile({ profile = {} }) {
+  if (!["name", "logo", "address", "vat_number", "phone", "website"].some((field) => profile[field])) return null;
+  const website = /^https?:\/\//i.test(profile.website || "") ? profile.website : null;
+  const logo = profile.logo?.startsWith("data:image/png;base64,") ? profile.logo : null;
+  const phone = profile.phone?.replace(/[ ().-]/g, "").replace(/^00/, "+");
+
+  return <section className="pq-card pq-business" aria-labelledby="pq-business-heading">
+    <div className="pq-business-identity">
+      {logo ? <img className="pq-business-logo" src={logo} alt={profile.name ? `Logo di ${profile.name}` : "Logo aziendale"} width="80" height="80" /> : <span className="pq-section-icon"><Icon name="store" size={24} /></span>}
+      <div><span className="pq-label">PROPOSTA DI</span><h2 id="pq-business-heading">{profile.name || "Il tuo professionista"}</h2></div>
+    </div>
+    {(profile.address || profile.vat_number || profile.phone || profile.website) && <dl className="pq-business-contacts">
+      {profile.address && <div className="pq-business-address"><dt>Indirizzo</dt><dd>{profile.address}</dd></div>}
+      {profile.vat_number && <div><dt>Partita IVA</dt><dd>{profile.vat_number}</dd></div>}
+      {profile.phone && <div><dt>Telefono</dt><dd><a href={`tel:${phone}`}>{profile.phone}</a></dd></div>}
+      {profile.website && <div className="pq-business-address"><dt>Sito web</dt><dd>{website ? <a href={website} target="_blank" rel="noopener noreferrer">{profile.website}<Icon name="external" size={15} /></a> : profile.website}</dd></div>}
+    </dl>}
+  </section>;
+}
+
 export default function PublicQuotePage() {
   const { token } = useParams();
   return <PublicQuote key={token} token={token} />;
@@ -88,6 +108,7 @@ function PublicQuote({ token }) {
           {(accepted || rejected) && <section className={`pq-response ${rejected ? "is-rejected" : ""}`} role="status"><Icon name={accepted ? "check" : "close"} size={28} /><div><h2>{accepted ? "Hai accettato il preventivo" : "Hai rifiutato il preventivo"}</h2><p>La tua risposta è stata registrata{date(accepted ? quote.accepted_at : quote.rejected_at) ? ` il ${date(accepted ? quote.accepted_at : quote.rejected_at)}` : ""}. Puoi continuare a consultare i dettagli qui sotto.</p></div></section>}
           <div className="pq-layout">
             <div className="pq-details">
+              <BusinessProfile profile={quote.business_profile} />
               <section className="pq-card">
                 <h2><span className="pq-section-icon"><Icon name="user" /></span> Un preventivo pensato per te</h2>
                 <div className="pq-info-grid"><div><span className="pq-label">PREPARATO PER</span><strong>{quote.customer_name}</strong>{quote.company_name && <p>{quote.company_name}</p>}</div><div><span className="pq-label">DATA DI INVIO</span><strong>{date(quote.sent_at) || "Non specificata"}</strong></div></div>
