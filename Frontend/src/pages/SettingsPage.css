@@ -9,6 +9,7 @@
 .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 24px; }
 .settings-card { min-width: 0; padding: 28px; border: 1px solid var(--sq-border); border-radius: 16px; background: #fff; box-shadow: 0 3px 12px #17233b03; }
 .settings-card-heading { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 26px; }
+.settings-card-heading > div { min-width: 0; overflow-wrap: anywhere; }
 .settings-card h2 { font-size: 20px; font-weight: 600; letter-spacing: -.4px; }
 .settings-card-heading p { margin-top: 6px; font-size: 14px; color: var(--sq-text-secondary); }
 .settings-card fieldset { display: grid; gap: 18px; min-width: 0; margin: 0; padding: 0; border: 0; }

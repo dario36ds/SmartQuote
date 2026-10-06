@@ -2,7 +2,7 @@
 .sq-notifications summary { position: relative; width: 50px; height: 50px; color: var(--sq-text-secondary); list-style: none; }
 .sq-notifications summary::-webkit-details-marker { display: none; }
 .sq-notification-count { position: absolute; top: -4px; right: -5px; display: grid; place-items: center; min-width: 21px; height: 21px; padding: 0 5px; border: 2px solid white; border-radius: 20px; color: white; background: var(--sq-primary); font-size: 10px; font-weight: 700; }
-.sq-notification-panel { position: absolute; top: calc(100% + 15px); right: 0; z-index: 40; display: flex; flex-direction: column; width: min(380px, calc(100vw - 32px)); max-height: min(520px, calc(100svh - 120px)); overflow: hidden; border: 1px solid var(--sq-border); border-radius: 14px; background: white; box-shadow: 0 12px 30px #23204814; }
+.sq-notification-panel { position: absolute; top: calc(100% + 15px); right: 0; z-index: 40; display: flex; flex-direction: column; width: min(380px, calc(100vw - 32px)); max-height: min(520px, var(--sq-notification-available-height, calc(100svh - 120px))); overflow: hidden; border: 1px solid var(--sq-border); border-radius: 14px; background: white; box-shadow: 0 12px 30px #23204814; }
 .sq-notification-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--sq-border); }
 .sq-notification-panel h2 { font-size: 16px; font-weight: 600; }
 .sq-notification-panel .sq-icon-button { width: 44px; height: 44px; flex-shrink: 0; }
@@ -16,23 +16,24 @@
 .sq-notification-symbol-accepted { color: var(--sq-status-accepted); background: var(--sq-status-accepted-bg); }
 .sq-notification-symbol-rejected { color: var(--sq-status-rejected); background: var(--sq-status-rejected-bg); }
 .sq-notification-symbol-reminder { color: var(--sq-primary-dark); background: var(--sq-soft); }
-.sq-notification-text { display: grid; gap: 5px; flex: 1; min-width: 0; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
-.sq-notification-text strong { font-size: 13px; font-weight: 600; }
+.sq-notification-text { display: grid; gap: 5px; flex: 1; min-width: 0; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.sq-notification-text strong { font-size: 14px; font-weight: 600; }
 .sq-notification-text > span { color: var(--sq-text-secondary); }
-.sq-notification-text time, .sq-notification-text small { color: var(--sq-muted); font-size: 11px; }
+.sq-notification-text time, .sq-notification-text small { color: var(--sq-muted); font-size: 12px; }
+.sq-notification-text .sq-notification-action { display: flex; align-items: center; gap: 4px; color: var(--sq-primary-dark); font-weight: 600; }
 .sq-notification-dot { width: 7px; height: 7px; flex-shrink: 0; margin-top: 8px; border-radius: 50%; background: var(--sq-primary); }
 .sq-notification-panel > footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--sq-border); }
 .sq-notification-panel > footer small { color: var(--sq-muted); font-size: 11px; }
-.sq-notification-panel > footer button { min-height: 44px; padding: 8px; border-radius: 8px; color: var(--sq-primary-dark); background: var(--sq-soft); font-size: 12px; }
+.sq-notification-panel > footer button { min-height: 44px; padding: 10px 12px; border-radius: 10px; color: var(--sq-primary-dark); background: var(--sq-soft); font-size: 12px; }
+.sq-notification-panel > footer button:hover { background: var(--sq-soft-hover); }
 .sq-workspace .sq-notification-error { margin: 12px !important; padding: 12px; border-radius: 8px; background: var(--sq-status-rejected-bg); color: var(--sq-status-rejected); font-size: 12px; overflow-wrap: anywhere; }
-.sq-notification-toast { position: fixed; bottom: 20px; right: 20px; z-index: 50; display: flex; align-items: center; gap: 12px; width: min(420px, calc(100vw - 32px)); padding: 16px; border: 1px solid var(--sq-border); border-radius: 14px; background: white; box-shadow: 0 12px 30px #23204814; }
-.sq-notification-toast > .sq-icon { flex-shrink: 0; color: var(--sq-primary); }
+.sq-notification-toast { position: fixed; bottom: 20px; right: 20px; z-index: 50; display: flex; align-items: flex-start; gap: 12px; width: min(420px, calc(100vw - 32px)); padding: 16px; border: 1px solid var(--sq-border); border-radius: 14px; background: white; box-shadow: 0 12px 30px #23204814; }
 .sq-notification-toast p { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: 13px; line-height: 1.6; }
 .sq-notification-toast .sq-icon-button { flex-shrink: 0; width: 44px; height: 44px; border: 0; cursor: pointer; }
 
 @media (max-width: 767px) {
   .sq-notifications { position: static; }
   .sq-notifications summary { width: 44px; height: 44px; }
-  .sq-notification-panel { top: calc(100% + 8px); right: 16px; left: 16px; width: auto; max-height: calc(100svh - 220px); }
-  .sq-notification-toast { right: 16px; bottom: 16px; }
+  .sq-notification-panel { top: var(--sq-notification-top, calc(100% + 8px)); right: 16px; left: 16px; width: auto; }
+  .sq-notification-toast { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); gap: 10px; padding: 14px; }
 }

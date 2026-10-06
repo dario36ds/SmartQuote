@@ -118,11 +118,17 @@
 .quote-editor-public-link button { display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; color: var(--sq-primary-dark); background: transparent; }
 .quote-share { margin-top: 10px; }
 .quote-share-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.quote-share-actions .sq-button { min-height: 38px; padding: 9px 10px; gap: 6px; font-size: 12px; background: var(--sq-soft); }
-.sq-workspace .quote-share-whatsapp, .quote-share-whatsapp .sq-icon { color: #006a61; }
-.quote-share-actions .sq-button:hover { background: #e9edff; }
-.quote-share-help { margin-top: 10px; color: var(--sq-muted); font-size: 12px; line-height: 1.6; }
-.quote-reminder-note { margin-top: 20px !important; padding: 14px; border-radius: 10px; color: var(--sq-primary-dark); background: var(--sq-soft); font-size: 13px; line-height: 1.6; }
+.quote-share-actions .sq-button { min-height: 44px; padding: 10px 12px; gap: 6px; font-size: 12px; background: var(--sq-soft); }
+.sq-workspace .quote-share-whatsapp, .quote-share-whatsapp .sq-icon { color: var(--sq-teal); }
+.quote-share-actions .sq-button:hover { background: var(--sq-soft-hover); }
+.quote-share .quote-share-help { margin-top: 10px; color: var(--sq-text-secondary); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.quote-summary-column .quote-share-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+.quote-summary-column .quote-share-actions .sq-button { width: 100%; min-width: 0; min-height: 46px; font-size: 13px; white-space: normal; overflow-wrap: anywhere; }
+.quote-reminder-note { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; padding: 14px; border-radius: 10px; color: var(--sq-text-secondary); background: var(--sq-soft); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; scroll-margin-top: 100px; }
+.quote-reminder-note > .sq-icon { margin-top: 2px; color: var(--sq-primary-dark); }
+.quote-reminder-note > div { min-width: 0; }
+.quote-reminder-note strong { color: var(--sq-primary-dark); font-weight: 600; }
+.quote-reminder-note > div > p { margin-top: 4px; }
 .quote-conversion-card { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 22px; border-radius: 15px; background: white; box-shadow: 0 1px 2px #1428470a; }
 .quote-conversion-card h2 { font-size: 16px; font-weight: 500; }
 .quote-conversion-card p { font-size: 12px; color: var(--sq-muted); }
@@ -341,7 +347,7 @@ body:has(.quote-preview-dialog[open]) { overflow: hidden; }
   .quote-table-delivery { font-size: 13px; line-height: 1.6; }
   .quote-public-link { min-width: 0; }
   .quote-public-link button, .quote-public-link a { flex-shrink: 0; justify-content: center; width: 40px; height: 44px; }
-  .quote-share-actions .sq-button { min-height: 44px; padding: 10px 12px; }
+  .quote-summary-column .quote-share-actions .sq-button { min-height: 44px; }
   .quote-publish-link { justify-content: center; width: 100%; min-height: 44px; }
   .quote-table-actions .sq-icon-button { flex: 1; gap: 8px; width: auto; height: 44px; padding: 10px; background: var(--sq-soft); font-size: 13px; font-weight: 600; }
   .quote-action-label { display: inline; }

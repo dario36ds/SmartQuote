@@ -47,7 +47,7 @@ body:has(.sq-workspace) { margin: 0; background: var(--sq-bg); }
 .sq-workspace .sq-button-primary:hover { background: var(--sq-primary-dark); }
 .sq-button-secondary { background: white; color: var(--sq-ink); box-shadow: 0 1px 3px #18244208; }
 .sq-button-secondary .sq-icon { color: var(--sq-muted); }
-.sq-button-secondary:hover, .sq-button-secondary.is-active { background: #e9edff; }
+.sq-button-secondary:hover, .sq-button-secondary.is-active { background: var(--sq-soft-hover); }
 .sq-new-quote { min-width: 235px; }
 .sq-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border-radius: 9px; background: var(--sq-soft); color: #6f6c85; }
 .sq-icon-button:hover { background: #e0e6ff; color: var(--sq-primary-dark); }

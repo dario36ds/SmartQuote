@@ -11,6 +11,21 @@ import "./NotificationBell.css";
 
 const notificationDate = (value) => new Date(value).toLocaleString("it-IT", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
+function positionNotificationPanel(panel) {
+  if (!panel?.open) return;
+  const topbar = panel.closest(".sq-topbar");
+  if (!topbar) return;
+  const mobile = window.matchMedia("(max-width: 767px)").matches;
+  const height = window.visualViewport?.height || window.innerHeight;
+  const offset = window.visualViewport?.offsetTop || 0;
+  const topbarBounds = topbar.getBoundingClientRect();
+  const anchor = topbarBounds.bottom + (mobile ? 8 : 15);
+  const minimumHeight = Math.min(320, height - 32);
+  const top = mobile ? Math.max(offset + 16, Math.min(anchor, offset + height - minimumHeight - 16)) : anchor;
+  panel.style.setProperty("--sq-notification-top", `${top - topbarBounds.top}px`);
+  panel.style.setProperty("--sq-notification-available-height", `${Math.max(0, offset + height - top - 16)}px`);
+}
+
 export default function NotificationBell() {
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -59,6 +74,10 @@ export default function NotificationBell() {
       if (!document.hidden) load();
     }
 
+    function updatePanelPosition() {
+      positionNotificationPanel(panelRef.current);
+    }
+
     function closeOutside(event) {
       const panel = panelRef.current;
       if (panel && !panel.contains(event.target)) panel.open = false;
@@ -75,6 +94,10 @@ export default function NotificationBell() {
     load();
     const interval = setInterval(refreshWhenVisible, 30000);
     window.addEventListener("focus", refreshWhenVisible);
+    window.addEventListener("resize", updatePanelPosition);
+    window.addEventListener("scroll", updatePanelPosition, { passive: true });
+    window.visualViewport?.addEventListener("resize", updatePanelPosition);
+    window.visualViewport?.addEventListener("scroll", updatePanelPosition);
     document.addEventListener("visibilitychange", refreshWhenVisible);
     document.addEventListener("pointerdown", closeOutside);
     document.addEventListener("keydown", closeOnEscape);
@@ -84,6 +107,10 @@ export default function NotificationBell() {
       reloadRef.current = null;
       clearInterval(interval);
       window.removeEventListener("focus", refreshWhenVisible);
+      window.removeEventListener("resize", updatePanelPosition);
+      window.removeEventListener("scroll", updatePanelPosition);
+      window.visualViewport?.removeEventListener("resize", updatePanelPosition);
+      window.visualViewport?.removeEventListener("scroll", updatePanelPosition);
       document.removeEventListener("visibilitychange", refreshWhenVisible);
       document.removeEventListener("pointerdown", closeOutside);
       document.removeEventListener("keydown", closeOnEscape);
@@ -126,7 +153,7 @@ export default function NotificationBell() {
   }
 
   return <>
-    <details ref={panelRef} className="sq-notifications" onToggle={(event) => { if (event.currentTarget.open) reloadRef.current?.(); }}>
+    <details ref={panelRef} className="sq-notifications" onToggle={(event) => { if (event.currentTarget.open) { positionNotificationPanel(event.currentTarget); reloadRef.current?.(); } }}>
       <summary className="sq-icon-button" aria-label={unreadCount ? `Notifiche: ${unreadCount} non lette` : "Notifiche"}>
         <Icon name="bell" size={25} />
         {unreadCount > 0 && <span className="sq-notification-count" aria-hidden="true">{unreadCount > 99 ? "99+" : unreadCount}</span>}
@@ -137,13 +164,13 @@ export default function NotificationBell() {
         <div className="sq-notification-list" aria-busy={loading}>
           {loading ? <div className="sq-notification-empty" role="status"><span className="sq-visually-hidden">Caricamento notifiche…</span><SkeletonLines /></div> : notifications.length ? notifications.map((notification) => <button key={notification.id} type="button" className={`sq-notification-item ${!notification.read_at ? "is-unread" : ""}`} disabled={marking !== null} onClick={() => markRead(notification)} aria-label={`${notificationMessage(notification)} ${notification.quote ? "Apri preventivo" : "Preventivo eliminato"}${!notification.read_at ? ", non letta" : ""}`}>
             <span className={`sq-notification-symbol sq-notification-symbol-${notification.status.toLowerCase()}`}><Icon name={notification.status === "REMINDER" ? "bell" : notification.status === "ACCEPTED" ? "check" : "close"} size={22} /></span>
-            <span className="sq-notification-text"><strong>{notificationTitle(notification)}</strong><span>{notificationMessage(notification)}</span><time dateTime={notification.created_at}>{notificationDate(notification.created_at)}</time>{notification.can_remind && <small>Apri e prepara il sollecito</small>}{!notification.quote && <small>Preventivo eliminato</small>}</span>
+            <span className="sq-notification-text"><strong>{notificationTitle(notification)}</strong><span>{notificationMessage(notification)}</span><time dateTime={notification.created_at}>{notificationDate(notification.created_at)}</time>{notification.can_remind && <small className="sq-notification-action">Apri ed invia il sollecito<Icon name="chevron" size={14} /></small>}{!notification.quote && <small>Preventivo eliminato</small>}</span>
             {!notification.read_at && <span className="sq-notification-dot" aria-hidden="true" />}
           </button>) : !error && <p className="sq-notification-empty">Nessuna notifica. Le risposte dei clienti e i promemoria per sollecitare appariranno qui.</p>}
         </div>
-        {notifications.length > 0 && <footer>{notifications.length === 50 && <small>Ultime 50 notifiche</small>}<button type="button" disabled={!unreadCount || marking !== null} onClick={() => markRead()}>{marking === "all" ? "Aggiornamento…" : "Segna tutte come lette"}</button></footer>}
+        {notifications.length > 0 && <footer>{notifications.length === 50 && <small>Ultime 50 notifiche</small>}<button type="button" className="sq-button sq-button-secondary" disabled={!unreadCount || marking !== null} onClick={() => markRead()}>{marking === "all" ? "Aggiornamento…" : "Segna tutte come lette"}</button></footer>}
       </section>
     </details>
-    {toast?.token === token && createPortal(<div className="sq-notification-toast" role="status"><Icon name="bell" size={23} /><p>{toast.message}</p><button type="button" className="sq-icon-button" aria-label="Chiudi avviso di notifica" onClick={() => setToast(null)}><Icon name="close" size={19} /></button></div>, document.body)}
+    {toast?.token === token && createPortal(<div className="sq-notification-toast" role="status"><span className="sq-notification-symbol sq-notification-symbol-reminder"><Icon name="bell" size={22} /></span><p>{toast.message}</p><button type="button" className="sq-icon-button" aria-label="Chiudi avviso di notifica" onClick={() => setToast(null)}><Icon name="close" size={19} /></button></div>, document.body)}
   </>;
 }
