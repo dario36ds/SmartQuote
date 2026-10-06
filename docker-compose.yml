@@ -71,6 +71,19 @@ services:
       retries: 10
       start_period: 10s
 
+  reminders:
+    build: ./Backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+    command: ["python", "manage.py", "generate_quote_reminders", "--watch", "--interval", "60"]
+    depends_on:
+      backend:
+        condition: service_healthy
+
   frontend:
     build: ./Frontend
     environment:

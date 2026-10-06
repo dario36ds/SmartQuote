@@ -235,10 +235,20 @@ export default function QuotesPage() {
   }
 
   function handleItemChange(itemKey, event) {
-    const { name, value } = event.target;
-    setItems((current) => current.map((item) => item.key === itemKey ? { ...item, [name]: value } : item));
-    setFormSuccess("");
+  const { name, value } = event.target;
+
+  if (name === "quantity" && value !== "" && !/^\d+$/.test(value)) {
+    return;
   }
+
+  setItems((current) =>
+    current.map((item) =>
+      item.key === itemKey ? { ...item, [name]: value } : item
+    )
+  );
+
+  setFormSuccess("");
+}
 
   function handleAddItem() {
     if (busy || isPublished) return;
@@ -453,18 +463,18 @@ export default function QuotesPage() {
                 {items.map((item, index) => <div className="quote-item" key={item.key}>
                   <label className="quote-item-description" htmlFor={`item-description-${item.key}`}><span className="sq-visually-hidden">Servizio {index + 1}</span><ValidatedInput id={`item-description-${item.key}`} name="description" value={item.description} onChange={(event) => handleItemChange(item.key, event)} maxLength={255} placeholder="Descrizione servizio o articolo" required /><small>Voce {index + 1}</small></label>
                   <label htmlFor={`item-quantity-${item.key}`}><span className="sq-visually-hidden">Quantità voce {index + 1}</span><ValidatedInput
-    id={`item-quantity-${item.key}`}
-    name="quantity"
-    type="number"
-    inputMode="decimal"
-    min="0.01"
-    max="99999999.99"
-    step="0.01"
-    value={item.quantity}
-    onChange={(event) => handleItemChange(item.key, event)}
-    placeholder="1"
-    required
-  /></label>
+  id={`item-quantity-${item.key}`}
+  name="quantity"
+  type="number"
+  inputMode="numeric"
+  min="1"
+  max="99999999"
+  step="1"
+  value={item.quantity}
+  onChange={(event) => handleItemChange(item.key, event)}
+  placeholder="1"
+  required
+/></label>
                   <label className="quote-unit-price" htmlFor={`item-price-${item.key}`}><span className="sq-visually-hidden">Prezzo unitario voce {index + 1}</span><span aria-hidden="true">€</span><ValidatedInput id={`item-price-${item.key}`} name="unit_price" type="number" inputMode="decimal" min="0" max="99999999.99" step="0.01" value={item.unit_price} onChange={(event) => handleItemChange(item.key, event)} placeholder="0,00" required /></label>
                   <output className="quote-item-total" aria-label={`Totale voce ${index + 1}`}>{amount(lineTotal(item))}</output>
                   <button type="button" className="quote-remove-item" disabled={items.length === 1} onClick={() => handleRemoveItem(item.key)} aria-label={`Rimuovi voce ${index + 1}`} title="Rimuovi voce"><Icon name="trash" size={18} /></button>

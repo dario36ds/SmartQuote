@@ -36,6 +36,11 @@ class QuoteItemSerializer(serializers.ModelSerializer):
                 "La quantità deve essere maggiore di zero."
             )
 
+        if value != value.to_integral_value():
+            raise serializers.ValidationError(
+                "La quantità deve essere un numero intero."
+            )
+
         return value
 
     def validate_unit_price(self, value):

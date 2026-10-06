@@ -119,18 +119,18 @@ class QuoteNotificationTests(APITestCase):
         self.respond(self.quote(), "reject")
         self.respond(self.quote(customer=self.other_customer), "accept")
         self.client.force_authenticate(self.owner)
-        first = self.client.post(f"/api/notifications/{own.response_notification.pk}/read/").data["read_at"]
+        first = self.client.post(f"/api/notifications/{own.notifications.get().pk}/read/").data["read_at"]
         self.assertEqual(self.client.post("/api/notifications/read-all/").data["updated"], 1)
         self.assertEqual(self.client.post("/api/notifications/read-all/").data["updated"], 0)
         self.assertEqual(self.client.get("/api/notifications/").data["unread_count"], 0)
-        self.assertEqual(self.client.post(f"/api/notifications/{own.response_notification.pk}/read/").data["read_at"], first)
+        self.assertEqual(self.client.post(f"/api/notifications/{own.notifications.get().pk}/read/").data["read_at"], first)
         self.assertTrue(QuoteNotification.objects.filter(user=self.other, read_at__isnull=True).exists())
 
     def test_notifications_require_authentication(self):
         quote = self.quote()
         self.respond(quote, "accept")
         self.assertEqual(self.client.get("/api/notifications/").status_code, 401)
-        self.assertEqual(self.client.post(f"/api/notifications/{quote.response_notification.pk}/read/").status_code, 401)
+        self.assertEqual(self.client.post(f"/api/notifications/{quote.notifications.get().pk}/read/").status_code, 401)
         self.assertEqual(self.client.post("/api/notifications/read-all/").status_code, 401)
 
     def test_deleting_quote_preserves_notification_snapshot(self):
@@ -164,8 +164,8 @@ class QuoteNotificationTests(APITestCase):
         migration = import_module("quotes.migrations.0002_quotenotification")
         migration.seed_existing_responses(apps, SimpleNamespace(connection=connection))
         self.assertEqual(QuoteNotification.objects.count(), 2)
-        self.assertEqual(accepted.response_notification.created_at, responded_at)
-        self.assertEqual(rejected.response_notification.user_id, self.other.pk)
+        self.assertEqual(accepted.notifications.get().created_at, responded_at)
+        self.assertEqual(rejected.notifications.get().user_id, self.other.pk)
 
 
 class QuoteValidationTests(APITestCase):

@@ -205,6 +205,10 @@ class AcceptQuoteView(APIView):
             ]
         )
 
+        QuoteNotification.objects.filter(
+            quote=quote, status=QuoteNotification.REMINDER, read_at__isnull=True,
+        ).update(read_at=quote.accepted_at)
+
         QuoteNotification.objects.create(
             user_id=quote.customer.user_id,
             quote=quote,
@@ -253,6 +257,10 @@ class RejectQuoteView(APIView):
                 "rejected_at",
             ]
         )
+
+        QuoteNotification.objects.filter(
+            quote=quote, status=QuoteNotification.REMINDER, read_at__isnull=True,
+        ).update(read_at=quote.rejected_at)
 
         QuoteNotification.objects.create(
             user_id=quote.customer.user_id,

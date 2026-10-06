@@ -1,6 +1,7 @@
 import uuid
 
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -85,23 +86,43 @@ class QuoteItem(models.Model):
         return self.quantity * self.unit_price
 
 
+class QuoteReminderSettings(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name="quote_reminder_settings",
+    )
+    enabled = models.BooleanField(default=True)
+    after_days = models.PositiveSmallIntegerField(
+        default=7, validators=[MinValueValidator(1), MaxValueValidator(365)],
+    )
+
+    class Meta:
+        constraints = [models.CheckConstraint(
+            condition=models.Q(after_days__gte=1, after_days__lte=365),
+            name="quote_reminder_days_range",
+        )]
+
+
 class QuoteNotification(models.Model):
+    REMINDER = "REMINDER"
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="quote_notifications",
     )
-    quote = models.OneToOneField(
+    quote = models.ForeignKey(
         Quote,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="response_notification",
+        related_name="notifications",
     )
     status = models.CharField(
         max_length=20,
         choices=[
             (Quote.Status.ACCEPTED, "Accettato"),
             (Quote.Status.REJECTED, "Rifiutato"),
+            (REMINDER, "Da sollecitare"),
         ],
     )
     quote_title = models.CharField(max_length=200)
@@ -112,3 +133,13 @@ class QuoteNotification(models.Model):
     class Meta:
         ordering = ["-created_at", "-id"]
         indexes = [models.Index(fields=["user", "read_at", "-created_at"])]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["quote"], condition=models.Q(status="REMINDER"),
+                name="unique_quote_reminder",
+            ),
+            models.UniqueConstraint(
+                fields=["quote"], condition=models.Q(status__in=["ACCEPTED", "REJECTED"]),
+                name="unique_quote_response",
+            ),
+        ]

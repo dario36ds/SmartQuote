@@ -19,6 +19,8 @@ Il ciclo del preventivo comprende gli stati **Bozza**, **Inviato**, **Visualizza
 
 Le notifiche e il loro stato di lettura vengono conservati nel database per il proprietario del preventivo. La campanella mostra le ultime 50 notifiche e conta tutte quelle non lette. Se elimini un preventivo, il riepilogo della notifica rimane consultabile. La migrazione `quotes/0002_quotenotification` include anche le risposte già registrate.
 
+Il backend dei promemoria conserva preferenze personali (`enabled`, `after_days` da 1 a 365; predefinito: attivo dopo 7 giorni) e genera una sola notifica `REMINDER` per ogni preventivo Inviato o Visualizzato senza risposta. La soglia si calcola dalla data di invio e vale anche per i preventivi già presenti. Leggere la notifica o cambiare l’intervallo non genera duplicati; disattivare i promemoria ferma quelli nuovi. Una risposta del cliente chiude il promemoria e lo segna come letto, conservando anche la notifica della risposta. La migrazione `quotes/0003_quote_reminders` aggiunge queste preferenze e mantiene lo storico esistente. La configurazione e la visualizzazione dei promemoria nel frontend sono previste nei passaggi successivi.
+
 ## Tecnologie e struttura
 
 - **Frontend:** React 19, React Router, Vite 8 ed ESLint.
@@ -59,6 +61,8 @@ docker compose up --build
 ```
 
 Compose avvia PostgreSQL e Ollama, scarica il modello configurato se non è già disponibile, applica le migrazioni e avvia backend e frontend. Il primo avvio può richiedere tempo per il download del modello. Database e modelli vengono conservati nei volumi Docker.
+
+Il servizio `reminders` controlla ogni minuto i preventivi e genera i promemoria anche quando l’app è chiusa. Per l’avvio locale puoi eseguire `uv run manage.py generate_quote_reminders --watch --interval 60` in un terminale dalla cartella `Backend`; senza `--watch` esegue un solo controllo. La lettura delle notifiche recupera anche i promemoria scaduti dell’utente corrente.
 
 | Servizio | Indirizzo locale |
 | --- | --- |
@@ -182,6 +186,7 @@ Le API private richiedono l’header `Authorization: Token <token>`. Clienti e p
 | `/api/quotes/public/:token/` | `GET`: consultazione pubblica tramite token UUID. |
 | `/api/quotes/public/:token/accept/`, `/api/quotes/public/:token/reject/` | `POST`: risposta del cliente. |
 | `/api/notifications/` | `GET`: ultime 50 notifiche dell’utente e conteggio delle non lette. |
+| `/api/notifications/settings/` | `GET`, `PATCH`: preferenze personali dei promemoria (`enabled`, `after_days` da 1 a 365). |
 | `/api/notifications/:id/read/` | `POST`: segna una notifica come letta. |
 | `/api/notifications/read-all/` | `POST`: segna tutte le notifiche dell’utente come lette. |
 
@@ -204,7 +209,7 @@ uv run manage.py check
 uv run manage.py test
 ```
 
-I test dei preventivi verificano creazione e lettura delle notifiche, isolamento tra utenti, recupero delle risposte precedenti e gestione di accettazioni e rifiuti simultanei su PostgreSQL. Dopo un aggiornamento, applica le nuove migrazioni con `uv run manage.py migrate`; nell’avvio Docker vengono applicate automaticamente dal backend.
+I test dei preventivi verificano creazione e lettura delle notifiche, isolamento tra utenti, recupero delle risposte precedenti e gestione di accettazioni e rifiuti simultanei su PostgreSQL. I test dei promemoria controllano soglie temporali, preferenze, chiusura dopo una risposta, conservazione dello storico e generazione concorrente senza duplicati. Dopo un aggiornamento, applica le nuove migrazioni con `uv run manage.py migrate`; nell’avvio Docker vengono applicate automaticamente dal backend.
 
 ## Problemi comuni
 
