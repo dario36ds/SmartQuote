@@ -35,7 +35,7 @@ const decimalNumber = (value) => {
   return Number.isFinite(number) ? number : 0;
 };
 const lineTotal = (item) => {
-  return decimalNumber(item.quantity) * decimalNumber(item.unit_price);
+  return Number(item.quantity) * decimalNumber(item.unit_price);
 };
 const publicUrl = (quote) => `${window.location.origin}/q/${quote.public_token}`;
 
@@ -112,7 +112,7 @@ export default function QuotesPage() {
     savedQuote.items.length !== items.length ||
     items.some((item, index) =>
       item.description !== savedQuote.items[index].description ||
-      decimalNumber(item.quantity) !== decimalNumber(savedQuote.items[index].quantity) ||
+      Number(item.quantity) !== Number(savedQuote.items[index].quantity) ||
       Number(item.unit_price) !== Number(savedQuote.items[index].unit_price)
     )
   );
@@ -340,7 +340,7 @@ export default function QuotesPage() {
     try {
       const quote = await apiRequest(isEditing ? `/quotes/${editingId}/` : "/quotes/", {
         method: isEditing ? "PATCH" : "POST", token,
-        body: { ...quoteForm, customer: Number(quoteForm.customer), items: items.map(({ description, quantity, unit_price }) => ({ description, quantity: String(quantity).replace(",", "."), unit_price })) },
+        body: { ...quoteForm, customer: Number(quoteForm.customer), items: items.map(({ description, quantity, unit_price }) => ({ description, quantity, unit_price })) },
       });
       setQuotes((current) => isEditing ? current.map((item) => item.id === quote.id ? quote : item) : [quote, ...current]);
       fillEditor(quote);
@@ -513,7 +513,7 @@ export default function QuotesPage() {
             <div className="quote-summary-heading"><h2>Riepilogo economico</h2><span>{dataLoading ? <Skeleton width={50} height={14} /> : `${items.length} ${items.length === 1 ? "voce" : "voci"}`}</span></div>
             {dataLoading ? <QuoteSummarySkeleton /> : <>
               <dl><div><dt>Valore dei servizi</dt><dd>{amount(previewTotal)}</dd></div><div><dt>Quantità complessiva</dt><dd>{items.reduce(
-    (total, item) => total + decimalNumber(item.quantity),
+    (total, item) => total + Number(item.quantity),
     0
   ).toLocaleString("it-IT", { maximumFractionDigits: 2 }).toLocaleString("it-IT", { maximumFractionDigits: 2 })}</dd></div><div><dt>Consegna stimata</dt><dd>{quoteForm.delivery_time || "Da definire"}</dd></div><div><dt>Stato</dt><dd className={`quote-summary-state quote-summary-state-${(savedQuote?.status || "DRAFT").toLowerCase()}`}>{STATUS_LABELS[savedQuote?.status || "DRAFT"]}</dd></div></dl>
               <div className="quote-grand-total" aria-live="polite"><span>Totale preventivo</span><div><strong>{amount(previewTotal)}</strong><Icon name="quote" size={25} /></div></div>

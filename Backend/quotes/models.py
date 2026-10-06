@@ -69,16 +69,21 @@ class QuoteItem(models.Model):
 
     description = models.CharField(max_length=255)
 
-    quantity = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
+    quantity = models.PositiveIntegerField(
         default=1,
+        validators=[MinValueValidator(1), MaxValueValidator(99999999)],
     )
 
     unit_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
     )
+
+    class Meta:
+        constraints = [models.CheckConstraint(
+            condition=models.Q(quantity__gte=1, quantity__lte=99999999),
+            name="quote_item_quantity_range",
+        )]
 
     def __str__(self):
         return self.description

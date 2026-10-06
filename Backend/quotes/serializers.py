@@ -8,7 +8,20 @@ from .models import Quote, QuoteItem
 MAX_TOTAL = Decimal("9999999999.99")
 
 
+class QuoteItemQuantityField(serializers.IntegerField):
+    default_error_messages = {
+        "invalid": "La quantità deve essere un numero intero.",
+    }
+
+    def to_internal_value(self, data):
+        value = str(data)
+        if not value.isascii() or not value.isdigit():
+            self.fail("invalid")
+        return super().to_internal_value(data)
+
+
 class QuoteItemSerializer(serializers.ModelSerializer):
+    quantity = QuoteItemQuantityField(min_value=1, max_value=99999999, required=False)
     total = serializers.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -30,19 +43,6 @@ class QuoteItemSerializer(serializers.ModelSerializer):
             "total",
         )
 
-    def validate_quantity(self, value):
-        if value <= 0:
-            raise serializers.ValidationError(
-                "La quantità deve essere maggiore di zero."
-            )
-
-        if value != value.to_integral_value():
-            raise serializers.ValidationError(
-                "La quantità deve essere un numero intero."
-            )
-
-        return value
-
     def validate_unit_price(self, value):
         if value < 0:
             raise serializers.ValidationError(
@@ -55,7 +55,7 @@ class QuoteItemSerializer(serializers.ModelSerializer):
         missing = {field: "Compila questo campo." for field in ("description", "unit_price") if field not in attrs}
         if missing:
             raise serializers.ValidationError(missing)
-        attrs.setdefault("quantity", Decimal("1"))
+        attrs.setdefault("quantity", 1)
         if attrs["quantity"] * attrs["unit_price"] > MAX_TOTAL:
             raise serializers.ValidationError({
                 "unit_price": "Il totale della voce non può superare 9.999.999.999,99 €.",
