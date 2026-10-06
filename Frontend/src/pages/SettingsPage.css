@@ -28,11 +28,16 @@
 .settings-card fieldset:disabled input { opacity: .6; }
 .settings-checkbox { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; line-height: 1.6; cursor: pointer; }
 .settings-checkbox input { flex-shrink: 0; width: 20px; height: 20px; accent-color: var(--sq-primary); }
+.settings-company-card { grid-column: 1 / -1; }
+.settings-company-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; }
+.settings-field-wide { grid-column: 1 / -1; }
+.settings-company-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 
 @media (max-width: 1023px) {
   .settings-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 767px) {
+  .settings-company-fields { grid-template-columns: 1fr; }
   .settings-heading h1 { font-size: 28px; }
   .settings-heading p { font-size: 14px; }
   .settings-card { padding: 20px; }

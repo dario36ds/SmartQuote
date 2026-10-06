@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import AuthenticatedLayout from "../components/AuthenticatedLayout";
+import CompanyProfileSettings from "../components/CompanyProfileSettings";
 import Icon from "../components/Icon";
 import PasswordInput from "../components/PasswordInput";
 import ReminderSettings from "../components/ReminderSettings";
@@ -68,7 +69,7 @@ export default function SettingsPage() {
       <div className="settings-page">
         <div className="settings-heading">
           <h1>Impostazioni</h1>
-          <p>Gestisci il tuo account e i promemoria per i preventivi.</p>
+          <p>Gestisci il tuo account, il profilo aziendale e i promemoria per i preventivi.</p>
         </div>
 
         <div className="settings-account-summary">
@@ -77,6 +78,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="settings-grid">
+          <CompanyProfileSettings key={user?.id} busy={Boolean(saving)} onSavingChange={(value) => setSaving(value ? "company" : null)} />
           <section className="settings-card" aria-labelledby="settings-email-heading">
             <div className="settings-card-heading">
               <span className="settings-section-icon"><Icon name="mail" size={24} /></span>
