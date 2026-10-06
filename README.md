@@ -124,10 +124,9 @@ Il frontend e l’API diventano disponibili dopo la preparazione del modello. Il
 | --- | --- |
 | Applicazione React | http://localhost:5173 |
 | API Django | http://127.0.0.1:8000/api/ |
-| Amministrazione Django | http://localhost:5173/admin/ |
 | PostgreSQL | `127.0.0.1:5432`, oppure la porta esterna scelta con `DB_PORT`. |
 
-Nginx serve `/static/` dalla cartella `/app/Backend/staticfiles/` prodotta da `collectstatic` e inoltra `/admin/` a Django. Con `DJANGO_DEBUG=False`, usa l'indirizzo dell'admin sulla porta **5173** per caricare anche CSS e JavaScript; la porta 8000 espone direttamente Django e non serve gli statici. I file vengono raccolti a ogni avvio nello stesso container, senza volumi o servizi aggiuntivi. Se la raccolta fallisce, l'avvio viene interrotto come per le migrazioni.
+Nginx serve `/static/` dalla cartella `/app/Backend/staticfiles/` prodotta da `collectstatic`. L'admin Django è disabilitato quando `DJANGO_DEBUG=False`; in Docker Nginx restituisce inoltre `404` per `/admin` e `/admin/`. Gli statici vengono raccolti a ogni avvio nello stesso container, senza volumi o servizi aggiuntivi. Se la raccolta fallisce, l'avvio viene interrotto come per le migrazioni.
 
 Ollama ascolta sulla porta 11434 all’interno del container; Compose non pubblica questa porta sul computer. Le dipendenze di avvio sono gestite dallo script `docker/start.py`, senza altri servizi Compose o `depends_on`.
 
@@ -138,13 +137,7 @@ docker compose logs -f app
 docker compose down
 ```
 
-Per usare l’amministrazione Django, crea facoltativamente un superutente:
-
-```bash
-docker compose exec app python manage.py createsuperuser
-```
-
-Apri l’applicazione, registra un account e accedi. Il superutente non è necessario per usare clienti e preventivi.
+Apri l’applicazione, registra un account e accedi.
 
 ## Avvio locale per sviluppo
 

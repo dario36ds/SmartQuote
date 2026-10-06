@@ -119,6 +119,9 @@ def main():
         supervisor.start("Ollama", ["ollama", "serve"])
         supervisor.wait_ready("PostgreSQL", postgres_ready)
         supervisor.run_once("Migrazioni", [sys.executable, "manage.py", "migrate", "--noinput"])
+        supervisor.run_once(
+            "Statici Django", [sys.executable, "manage.py", "collectstatic", "--noinput"]
+        )
         supervisor.wait_ready("Ollama", ollama_ready)
         model = os.environ["OLLAMA_MODEL"]
         if supervisor.run_once(
