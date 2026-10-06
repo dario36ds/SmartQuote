@@ -3,6 +3,7 @@ import { useState } from "react";
 import AuthenticatedLayout from "../components/AuthenticatedLayout";
 import Icon from "../components/Icon";
 import PasswordInput from "../components/PasswordInput";
+import ReminderSettings from "../components/ReminderSettings";
 import ValidatedInput from "../components/ValidatedInput";
 import { useAuth } from "../context/AuthContext";
 import "./SettingsPage.css";
@@ -67,7 +68,7 @@ export default function SettingsPage() {
       <div className="settings-page">
         <div className="settings-heading">
           <h1>Impostazioni</h1>
-          <p>Gestisci l’email e la password del tuo account.</p>
+          <p>Gestisci il tuo account e i promemoria per i preventivi.</p>
         </div>
 
         <div className="settings-account-summary">
@@ -126,6 +127,7 @@ export default function SettingsPage() {
               </fieldset>
             </form>
           </section>
+          <ReminderSettings busy={Boolean(saving)} onSavingChange={(value) => setSaving(value ? "reminders" : null)} />
         </div>
       </div>
     </AuthenticatedLayout>

@@ -25,6 +25,8 @@
 .settings-error { color: var(--sq-status-rejected); background: var(--sq-status-rejected-bg); }
 .settings-card .sq-button { justify-self: start; }
 .settings-card fieldset:disabled input { opacity: .6; }
+.settings-checkbox { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; line-height: 1.6; cursor: pointer; }
+.settings-checkbox input { flex-shrink: 0; width: 20px; height: 20px; accent-color: var(--sq-primary); }
 
 @media (max-width: 1023px) {
   .settings-grid { grid-template-columns: 1fr; }
