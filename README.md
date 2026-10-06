@@ -229,13 +229,13 @@ Gli esempi sensibili nella tabella sono segnaposto da sostituire.
 
 | Variabile | Descrizione | Esempio |
 | --- | --- | --- |
-| `DJANGO_SECRET_KEY` | Chiave segreta Django, obbligatoria e non vuota. | `change-me` |
+| `DJANGO_SECRET_KEY` | Chiave segreta Django, obbligatoria e non vuota. | `sostituisci-con-una-chiave-casuale-locale` |
 | `DJANGO_DEBUG` | Debug Django; l'esempio e il default del codice sono `False`, come nell'avvio Docker consigliato. | `False` |
 | `DJANGO_ALLOWED_HOSTS` | Host consentiti, separati da virgole, senza protocollo o porta. | `localhost,127.0.0.1` |
 | `CORS_ALLOWED_ORIGINS` | Origini frontend consentite, complete di protocollo e porta. | `http://localhost:5173,http://127.0.0.1:5173` |
 | `DB_NAME` | Nome del database PostgreSQL. | `smartquote` |
 | `DB_USER` | Ruolo PostgreSQL utilizzato da Django. | `smartquote` |
-| `DB_PASSWORD` | Password del ruolo PostgreSQL. | `change-me` |
+| `DB_PASSWORD` | Password del ruolo PostgreSQL. | `smartquote_password` |
 | `DB_HOST` | Host PostgreSQL per l’avvio locale; Compose imposta `127.0.0.1` nel container. | `127.0.0.1` |
 | `DB_PORT` | Porta PostgreSQL locale; in Compose sceglie la porta pubblicata sul computer, mentre quella interna resta 5432. | `5432` |
 | `OLLAMA_BASE_URL` | URL Ollama usato dal backend; Compose imposta l’indirizzo interno indicato nell’esempio. | `http://127.0.0.1:11434` |
@@ -278,7 +278,7 @@ La richiesta non usa streaming e ha un timeout di 120 secondi. Errori di conness
 | --- | --- |
 | `DRAFT` — Bozza | Modificabile e utilizzabile per la generazione AI; la pagina pubblica non è accessibile. |
 | `SENT` — Inviato | Il link è stato pubblicato e la data di invio registrata. |
-| `VIEWED` — Visualizzato | Dopo il caricamento della pagina pubblica, il frontend registra la visualizzazione tramite un POST dedicato; anche l’apertura del link da parte del gestore produce questo passaggio. Il GET pubblico non modifica il preventivo. |
+| `VIEWED` — Visualizzato | Dopo il caricamento della pagina pubblica, il frontend chiama `POST /api/quotes/public/:token/view/`: solo `SENT` passa a `VIEWED`, anche se il link è aperto dal gestore. Il GET pubblico non modifica il preventivo; le chiamate successive a `/view/` lasciano invariati stato e timestamp, anche per `ACCEPTED` e `REJECTED`. |
 | `ACCEPTED` — Accettato | Il cliente ha confermato l’accettazione. |
 | `REJECTED` — Rifiutato | Il cliente ha confermato il rifiuto. |
 
