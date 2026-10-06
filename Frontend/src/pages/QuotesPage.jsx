@@ -11,6 +11,7 @@ import Icon from "../components/Icon";
 import QuoteShareActions from "../components/QuoteShareActions";
 import ValidatedInput from "../components/ValidatedInput";
 import { useAuth } from "../context/AuthContext";
+import { createQuoteItem } from "../utils/quoteItems";
 import "./QuotesPage.css";
 
 const STATUS_LABELS = {
@@ -37,10 +38,6 @@ const lineTotal = (item) => {
   return decimalNumber(item.quantity) * decimalNumber(item.unit_price);
 };
 const publicUrl = (quote) => `${window.location.origin}/q/${quote.public_token}`;
-
-function createEmptyItem() {
-  return { key: crypto.randomUUID(), description: "", quantity: "1", unit_price: "" };
-}
 
 function StatusBadge({ status }) {
   return <span className={`quote-status quote-status-${status.toLowerCase()}`}><span />{STATUS_LABELS[status] || status}</span>;
@@ -71,7 +68,7 @@ export default function QuotesPage() {
   const [customerSaving, setCustomerSaving] = useState(false);
   const [customerId, setCustomerId] = useState(() => searchParams.get("customer") || "");
   const [quoteForm, setQuoteForm] = useState({ ...EMPTY_QUOTE });
-  const [items, setItems] = useState(() => [createEmptyItem()]);
+  const [items, setItems] = useState(() => [createQuoteItem()]);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
@@ -148,7 +145,7 @@ export default function QuotesPage() {
           if (requestedQuote) {
             setEditingId(requestedQuote.id);
             setQuoteForm({ customer: String(requestedQuote.customer), title: requestedQuote.title, description: requestedQuote.description, delivery_time: requestedQuote.delivery_time });
-            setItems(requestedQuote.items.length ? requestedQuote.items.map((item) => ({ key: crypto.randomUUID(), description: item.description, quantity: item.quantity, unit_price: item.unit_price })) : [createEmptyItem()]);
+            setItems(requestedQuote.items.length ? requestedQuote.items.map(createQuoteItem) : [createQuoteItem()]);
           }
         }
       } catch (err) {
@@ -245,7 +242,7 @@ export default function QuotesPage() {
 
   function handleAddItem() {
     if (busy || isPublished) return;
-    setItems((current) => [...current, createEmptyItem()]);
+    setItems((current) => [...current, createQuoteItem()]);
     setFormSuccess("");
   }
 
@@ -259,7 +256,7 @@ export default function QuotesPage() {
   function resetForm() {
     setEditingId(null);
     setQuoteForm({ ...EMPTY_QUOTE });
-    setItems([createEmptyItem()]);
+    setItems([createQuoteItem()]);
     setFormError("");
     setFormSuccess("");
     setAiError("");
@@ -279,7 +276,7 @@ export default function QuotesPage() {
   function fillEditor(quote) {
     setEditingId(quote.id);
     setQuoteForm({ customer: String(quote.customer), title: quote.title, description: quote.description, delivery_time: quote.delivery_time });
-    setItems(quote.items.length ? quote.items.map((item) => ({ key: crypto.randomUUID(), description: item.description, quantity: item.quantity, unit_price: item.unit_price })) : [createEmptyItem()]);
+    setItems(quote.items.length ? quote.items.map(createQuoteItem) : [createQuoteItem()]);
   }
 
   function handleEdit(quote) {
