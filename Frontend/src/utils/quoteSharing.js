@@ -1,8 +1,11 @@
-// Only address a specific WhatsApp contact when the country code is explicit.
+import { validatePhone } from "./validation.js";
+
+// Local numbers use Italy's country code; explicit international codes are kept.
 function whatsappNumber(phone = "") {
+  if (!phone.trim() || validatePhone(phone)) return "";
   const normalized = phone.trim().replace(/[\s().-]/g, "");
-  if (!normalized.startsWith("+") && !normalized.startsWith("00")) return "";
-  const digits = normalized.replace(/^(\+|00)/, "");
+  const international = normalized.startsWith("+") || normalized.startsWith("00");
+  const digits = international ? normalized.replace(/^(\+|00)/, "") : `39${normalized}`;
   return /^[1-9]\d{6,14}$/.test(digits) ? digits : "";
 }
 
@@ -16,11 +19,14 @@ export function getQuoteShareLinks(quote, customer, publicUrl) {
     "Resto a disposizione per qualsiasi domanda.",
   ].join("\n\n");
   const number = whatsappNumber(customer?.phone);
-  const email = encodeURIComponent(customer?.email?.trim() || "");
+  const email = customer?.email?.trim() || "";
+  const encodedEmail = encodeURIComponent(email).replace(/%40/g, "@");
 
   return {
-    email: `mailto:${email}?subject=${encodeURIComponent(`Preventivo: ${quote.title}`)}&body=${encodeURIComponent(message)}`,
-    whatsapp: `https://wa.me/${number}?text=${encodeURIComponent(message)}`,
+    email: email ? `mailto:${encodedEmail}?subject=${encodeURIComponent(`Preventivo: ${quote.title}`)}&body=${encodeURIComponent(message)}` : null,
+    whatsapp: number ? `https://wa.me/${number}?text=${encodeURIComponent(message)}` : null,
+    emailRecipient: email,
+    whatsappRecipient: number ? `+${number}` : "",
     hasWhatsappRecipient: Boolean(number),
   };
 }
